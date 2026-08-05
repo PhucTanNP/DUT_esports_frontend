@@ -88,73 +88,6 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState('');
   const [viewingReg, setViewingReg] = useState<Registration | null>(null);
-  const [myTournaments, setMyTournaments] = useState<Tournament[]>([]);
-  const [selectedTournamentId, setSelectedTournamentId] = useState('');
-
-  useEffect(() => {
-    void fetchTournaments();
-    if (userRole === 'admin') {
-      void fetchPendingTournaments();
-    }
-    void fetchMyTournaments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterStatus, userRole]);
-
-  const fetchMyTournaments = async () => {
-    try {
-      const result = await registrationAPI.getMyTournaments();
-      if (result.success) {
-        setMyTournaments(result.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching my tournaments:', err);
-    }
-  };
-
-  const fetchRegistrations = async (tournamentId: string, statusFilter: string) => {
-    if (!tournamentId) return;
-    try {
-      setRegLoading(true);
-      setRegError('');
-      const result = await registrationAPI.getMyRegistrations(tournamentId, statusFilter || 'all');
-      if (result.success) {
-        setRegistrations(result.data || []);
-        const tour = myTournaments.find((t) => t.id === tournamentId);
-        if (tour) {
-          setSelectedTournamentSchema(parseFormSchema(tour.form_schema));
-        }
-      } else {
-        setRegError(result.message || 'Không thể tải danh sách đăng ký');
-      }
-    } catch (err) {
-      setRegError('Lỗi kết nối: ' + (err as Error).message);
-    } finally {
-      setRegLoading(false);
-    }
-  };
-
-  const handleBannerUpload = async (file?: File) => {
-    if (!file) return;
-    setBannerUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('banner', file);
-      const res = await fetch(`${API_ORIGIN}/api/upload/banner`, {
-        method: 'POST',
-        body: fd,
-      });
-      const data = (await res.json()) as { success: boolean; url?: string; message?: string };
-      if (data.success && data.url) {
-        setForm((f) => ({ ...f, banner_url: data.url as string }));
-      } else {
-        setError('Upload thất bại: ' + (data.message || ''));
-      }
-    } catch (err) {
-      setError('Lỗi upload: ' + (err as Error).message);
-    } finally {
-      setBannerUploading(false);
-    }
-  };
 
   const fetchTournaments = async () => {
     try {
@@ -182,6 +115,39 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       }
     } catch (err) {
       console.error('Error fetching pending tournaments:', err);
+    }
+  };
+
+  useEffect(() => {
+    void (async () => {
+      await fetchTournaments();
+      if (userRole === 'admin') {
+        await fetchPendingTournaments();
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterStatus, userRole]);
+
+  const handleBannerUpload = async (file?: File) => {
+    if (!file) return;
+    setBannerUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('banner', file);
+      const res = await fetch(`${API_ORIGIN}/api/upload/banner`, {
+        method: 'POST',
+        body: fd,
+      });
+      const data = (await res.json()) as { success: boolean; url?: string; message?: string };
+      if (data.success && data.url) {
+        setForm((f) => ({ ...f, banner_url: data.url as string }));
+      } else {
+        setError('Upload thất bại: ' + (data.message || ''));
+      }
+    } catch (err) {
+      setError('Lỗi upload: ' + (err as Error).message);
+    } finally {
+      setBannerUploading(false);
     }
   };
 
@@ -446,28 +412,6 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     XLSX.writeFile(wb, fileName);
     setSuccess(`Đã xuất file ${fileName}`);
     setTimeout(() => setSuccess(''), 4000);
-  };
-
-  const renderFieldInput = (field: FormField, value: unknown, onChange: (value: string) => void) => {
-    const strValue = typeof value === 'string' ? value : value != null ? String(value) : '';
-    if (field.type === 'textarea') {
-      return (
-        <textarea className="reg-input" value={strValue} onChange={(e) => onChange(e.target.value)} required={field.required} placeholder="Nhập câu trả lời..." rows={3} />
-      );
-    }
-    if (field.type === 'select' && field.options) {
-      return (
-        <select className="reg-input" value={strValue} onChange={(e) => onChange(e.target.value)} required={field.required}>
-          <option value="">-- Chọn --</option>
-          {field.options.split(',').map((opt) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      );
-    }
-    return (
-      <input className="reg-input" type={field.type === 'email' ? 'email' : field.type === 'number' ? 'number' : 'text'} value={strValue} onChange={(e) => onChange(e.target.value)} required={field.required} placeholder={field.type === 'email' ? 'example@email.com' : 'Nhập câu trả lời...'} />
-    );
   };
 
   return (

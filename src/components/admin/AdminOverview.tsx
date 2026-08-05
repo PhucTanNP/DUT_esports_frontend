@@ -38,14 +38,6 @@ export default function AdminOverview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    void fetchStats();
-    // Auto-refresh stats every 30 seconds
-    const interval = setInterval(() => void fetchStats(), 30000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchStats = async () => {
     try {
       setError('');
@@ -61,6 +53,15 @@ export default function AdminOverview() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    void (async () => {
+      await fetchStats();
+      // Auto-refresh stats every 30 seconds
+      const interval = setInterval(() => void fetchStats(), 30000);
+      return () => clearInterval(interval);
+    })();
+  }, []);
 
   if (error) {
     return (

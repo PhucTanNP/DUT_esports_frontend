@@ -29,12 +29,6 @@ export default function CTVManager() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination>(EMPTY_PAGINATION);
 
-  // Load CTVs on component mount and when filters change
-  useEffect(() => {
-    void loadCTVs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterStatus, page]);
-
   const loadCTVs = async () => {
     try {
       setLoading(true);
@@ -54,6 +48,14 @@ export default function CTVManager() {
       setLoading(false);
     }
   };
+
+  // Load CTVs on component mount and when filters change
+  useEffect(() => {
+    void (async () => {
+      await loadCTVs();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterStatus, page]);
 
   const getAvatarLetter = (name: string) => {
     return name.charAt(0).toUpperCase();

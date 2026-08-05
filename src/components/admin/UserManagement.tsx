@@ -30,11 +30,6 @@ export default function UserManagement() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState<Pagination>(EMPTY_PAGINATION);
 
-  useEffect(() => {
-    void loadUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterRole, page]);
-
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -53,6 +48,14 @@ export default function UserManagement() {
       setLoading(false);
     }
   };
+
+  // Load users on mount and when filters change
+  useEffect(() => {
+    void (async () => {
+      await loadUsers();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterRole, page]);
 
   const getAvatarLetter = (name: string) => {
     return name.charAt(0).toUpperCase();

@@ -22,11 +22,6 @@ export default function TournamentDetail() {
   const [submittingForm, setSubmittingForm] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
 
-  useEffect(() => {
-    void fetchTournament();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
-
   const fetchTournament = async () => {
     try {
       setLoading(true);
@@ -43,6 +38,13 @@ export default function TournamentDetail() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    void (async () => {
+      await fetchTournament();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   const formSchema: FormField[] = parseFormSchema(tournament?.form_schema);
 

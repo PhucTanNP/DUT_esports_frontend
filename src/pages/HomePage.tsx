@@ -42,11 +42,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    void fetchTournaments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const fetchTournaments = async () => {
     try {
       setLoading(true);
@@ -71,13 +66,19 @@ export default function HomePage() {
         setError(result.message || 'Không thể tải danh sách giải đấu');
         setTournaments(getMockTournaments());
       }
-    } catch (err) {
+    } catch {
       setError('Lỗi kết nối');
       setTournaments(getMockTournaments());
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    void (async () => {
+      await fetchTournaments();
+    })();
+  }, []);
 
   return (
     <div className="homepage">

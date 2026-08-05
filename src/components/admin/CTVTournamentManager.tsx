@@ -64,11 +64,6 @@ export default function CTVTournamentManager() {
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
 
-  useEffect(() => {
-    void loadTournaments();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, filterStatus, page]);
-
   const loadTournaments = async () => {
     try {
       setLoading(true);
@@ -100,6 +95,14 @@ export default function CTVTournamentManager() {
       setLoading(false);
     }
   };
+
+  // Load tournaments on mount and when filters change
+  useEffect(() => {
+    void (async () => {
+      await loadTournaments();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, filterStatus, page]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

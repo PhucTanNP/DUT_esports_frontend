@@ -7,5 +7,15 @@ export default defineConfig({
   cacheDir: '.vite-cache',
   server: {
     port: 5173,
+    host: true, // truy cập từ LAN khi dev
+  },
+  preview: {
+    port: 4173,
+    host: true,
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false,
+    chunkSizeWarningLimit: 700, // xlsx nặng — nới giới hạn cảnh báo
   },
 });
