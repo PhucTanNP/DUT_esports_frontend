@@ -1,5 +1,7 @@
+'use client';
+
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams, useRouter } from 'next/navigation';
 import { registrationAPI } from '../services/registration.service';
 import { tournamentAPI } from '../services/tournament.service';
 import type { FormField, Tournament } from '../types';
@@ -10,8 +12,9 @@ import '../styles/TournamentDetail.css';
 type RegistrationData = Record<string, unknown>;
 
 export default function TournamentDetail() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const router = useRouter();
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [loading, setLoading] = useState(true);
@@ -101,7 +104,7 @@ export default function TournamentDetail() {
           <div className="error-message">
             <h2>❌ Lỗi</h2>
             <p>{error || 'Không tìm thấy giải đấu'}</p>
-            <button onClick={() => navigate('/')} className="btn-back">
+            <button onClick={() => router.push('/')} className="btn-back">
               ← Quay lại
             </button>
           </div>
@@ -146,7 +149,7 @@ export default function TournamentDetail() {
                 </div>
                 <div className={`status-badge ${statusClass}`}>{statusText}</div>
               </div>
-              <button onClick={() => navigate('/')} className="btn-close-detail">✕</button>
+              <button onClick={() => router.push('/')} className="btn-close-detail">✕</button>
             </div>
           </div>
         </div>
@@ -520,7 +523,7 @@ export default function TournamentDetail() {
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button onClick={() => navigate('/')} className="btn-back-home">
+          <button onClick={() => router.push('/')} className="btn-back-home">
             ← Quay lại Trang Chủ
           </button>
           {isRegistrationOpen && <button className="btn-register-primary">🎮 Đăng Ký Ngay</button>}

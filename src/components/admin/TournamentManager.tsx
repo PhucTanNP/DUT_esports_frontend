@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { API_ORIGIN, AVAILABLE_GAMES, getLogoUrl } from '../../config/constants';

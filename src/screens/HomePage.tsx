@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import TournamentCard, { type TournamentCardData } from '../components/TournamentCard';
 import { tournamentAPI } from '../services/tournament.service';

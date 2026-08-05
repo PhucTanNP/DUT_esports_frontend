@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { adminAPI } from '../../services/admin.service';
 import type { AdminStats } from '../../types';

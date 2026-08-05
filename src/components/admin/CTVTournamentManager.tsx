@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { tournamentAPI } from '../../services/tournament.service';
 import type { Tournament } from '../../types';

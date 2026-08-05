@@ -14,7 +14,7 @@ export default function Footer() {
         {/* Brand column */}
         <div className="footer-brand">
           <a href="/" aria-label="Trang chủ">
-            <img src={logo} alt="E-Sports Đà Nẵng Logo" className="footer-logo" />
+            <img src={logo.src} alt="E-Sports Đà Nẵng Logo" className="footer-logo" />
           </a>
           <p className="footer-brand-desc">
             Nền tảng tổ chức &amp; theo dõi giải đấu Esports hàng đầu tại Đà Nẵng.

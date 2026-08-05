@@ -1,7 +1,7 @@
 /** Cấu hình tập trung — dễ thay đổi khi deploy. */
 
-export const API_BASE: string = import.meta.env.VITE_API_BASE ?? 'http://localhost:5000/api';
-export const API_ORIGIN: string = import.meta.env.VITE_API_ORIGIN ?? 'http://localhost:5000';
+export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:5000/api';
+export const API_ORIGIN: string = process.env.NEXT_PUBLIC_API_ORIGIN ?? 'http://localhost:5000';
 
 export interface GameInfo {
   name: string;

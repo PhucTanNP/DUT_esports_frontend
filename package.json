@@ -1,33 +1,25 @@
 {
   "name": "frontend",
   "private": true,
-  "version": "1.0.0",
-  "description": "DUT Esports Tournament Platform - Frontend (React 19 + Vite + TypeScript)",
-  "type": "module",
+  "version": "2.0.0",
+  "description": "DUT Esports — Frontend (Next.js + React 19 + TypeScript)",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "next": "^15.3.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.2",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.0.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.1",
-    "eslint": "^10.2.1",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.2",
-    "globals": "^17.5.0",
-    "typescript": "^5.9.0",
-    "typescript-eslint": "^8.0.0",
-    "vite": "^8.0.10"
+    "typescript": "^5.9.0"
   }
 }
+

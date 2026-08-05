@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { userAPI, type UserRow } from '../../services/user.service';
 import type { Pagination, UserRole } from '../../types';

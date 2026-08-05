@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { ctvAPI, type CtvRow } from '../../services/ctv.service';
 import type { Pagination } from '../../types';

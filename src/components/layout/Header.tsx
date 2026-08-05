@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import logo from '../../images/logo.png';
 import StudentAuth from '../StudentAuth';
@@ -32,7 +34,7 @@ export default function Header() {
         <div className="header-container">
           <div className="logo">
             <a href="/" aria-label="Trang chủ">
-              <img src={logo} alt="E-Sports Đà Nẵng Logo" className="logo-img" />
+              <img src={logo.src} alt="E-Sports Đà Nẵng Logo" className="logo-img" />
             </a>
           </div>
 

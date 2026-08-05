@@ -1,7 +1,7 @@
 import type { ApiResponse } from '../types';
 
-/** Base URL của API backend — có thể override qua biến môi trường VITE_API_BASE. */
-export const API_BASE: string = import.meta.env.VITE_API_BASE ?? 'http://localhost:5000/api';
+/** Base URL của API backend — override qua NEXT_PUBLIC_API_BASE. */
+export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:5000/api';
 
 // ===========================
 // TOKEN MANAGEMENT

@@ -1,4 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+'use client';
+
+import { useRouter } from 'next/navigation';
 import '../styles/TournamentCard.css';
 
 /** Dữ liệu hiển thị trên card — đã được HomePage chuẩn hóa. */
@@ -18,15 +20,15 @@ interface TournamentCardProps {
 }
 
 export default function TournamentCard({ tournament }: TournamentCardProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleCardClick = () => {
-    navigate(`/tournament/${tournament.id}`);
+    router.push(`/tournament/${tournament.id}`);
   };
 
   const handleRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    navigate(`/tournament/${tournament.id}`);
+    router.push(`/tournament/${tournament.id}`);
   };
 
   const hasLogo =

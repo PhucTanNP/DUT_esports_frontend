@@ -1,3 +1,5 @@
+'use client';
+
 import { useEffect, useState } from 'react';
 import { authAPI, getAuthToken, removeAuthToken } from '../../services/auth.service';
 import type { SafeUser } from '../../types';
