@@ -1,0 +1,20 @@
+'use client';
+
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { getQueryClient } from '@/lib/query-client';
+
+/**
+ * Bọc toàn app bằng TanStack Query.
+ * Gắn vào app/layout.tsx (cần thêm @tanstack/react-query-devtools cho dev).
+ */
+export function QueryProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = getQueryClient();
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
+    </QueryClientProvider>
+  );
+}

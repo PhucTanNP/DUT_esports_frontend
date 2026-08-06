@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import logo from '../../images/logo.png';
 import '../../styles/Footer.css';
 
@@ -13,9 +14,9 @@ export default function Footer() {
 
         {/* Brand column */}
         <div className="footer-brand">
-          <a href="/" aria-label="Trang chủ">
+          <Link href="/" aria-label="Trang chủ">
             <img src={logo.src} alt="E-Sports Đà Nẵng Logo" className="footer-logo" />
-          </a>
+          </Link>
           <p className="footer-brand-desc">
             Nền tảng tổ chức &amp; theo dõi giải đấu Esports hàng đầu tại Đà Nẵng.
             Kết nối cộng đồng game thủ — nơi đam mê gặp gỡ chiến thắng.
