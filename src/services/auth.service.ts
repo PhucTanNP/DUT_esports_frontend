@@ -36,6 +36,23 @@ export const authAPI = {
     });
   },
 
+  async freeRegister(data: {
+    username: string;
+    password: string;
+    full_name: string;
+  }): Promise<ApiResponse<SafeUser>> {
+    const response = await apiRequest<SafeUser>('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (response.success && response.token) {
+      setAuthToken(response.token);
+      localStorage.setItem('student_user', JSON.stringify(response.user));
+    }
+    return response;
+  },
+
   // ===========================
   // SINH VIÊN (mã số sinh viên)
   // ===========================

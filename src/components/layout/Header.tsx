@@ -54,7 +54,7 @@ export default function Header() {
                 </span>
                 <div className="header-user-info">
                   <span className="header-user-name">{student.full_name}</span>
-                  <span className="header-user-mssv">{student.student_id}</span>
+                  <span className="header-user-mssv">{student.student_id || student.username || 'Tài khoản tự do'}</span>
                 </div>
                 <button className="header-logout" onClick={handleLogout} title="Đăng xuất">
                   🚪

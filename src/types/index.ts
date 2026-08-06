@@ -14,6 +14,7 @@ export type ParticipationType = 'individual' | 'team';
 export interface SafeUser {
   id: string;
   email: string | null;
+  username?: string | null;
   full_name: string;
   student_id: string | null;
   phone: string | null;
