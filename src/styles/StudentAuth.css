@@ -114,6 +114,34 @@
   box-shadow: var(--shadow-glow, 0 0 24px rgba(255, 107, 0, 0.35));
 }
 
+.sa-register-types {
+  display: flex;
+  gap: 10px;
+}
+
+.sa-type {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--color-text-secondary, #b0b0b0);
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms ease);
+}
+
+.sa-type.active {
+  background: rgba(255, 107, 0, 0.16);
+  border-color: var(--color-primary, #ff6b00);
+  color: #fff;
+}
+
+.sa-type:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 /* ---------- Form ---------- */
 .sa-form {
   display: flex;
@@ -153,6 +181,10 @@
 .sa-field small {
   font-size: var(--font-size-xs, 12px);
   color: var(--color-text-muted, #7a7f9e);
+}
+
+.sa-field input[readonly] {
+  opacity: 0.9;
 }
 
 .sa-row {
@@ -244,6 +276,10 @@
 @media (max-width: 480px) {
   .sa-card {
     padding: 20px;
+  }
+
+  .sa-register-types {
+    flex-direction: column;
   }
 
   .sa-row {
