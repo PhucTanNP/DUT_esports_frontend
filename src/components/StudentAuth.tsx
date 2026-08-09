@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { authAPI } from '../services/auth.service';
+import { authAPI, extractUserFromResponse } from '../services/auth.service';
 import type { SafeUser } from '../types';
 import '../styles/StudentAuth.css';
 
@@ -170,7 +170,18 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
       }
 
       if (result.success) {
-        onSuccess?.(result.user as SafeUser);
+        const user = extractUserFromResponse(result);
+        if (user) {
+          onSuccess?.(user);
+        } else {
+          const fallback = await authAPI.getCurrentStudentProfile();
+            const fallbackUser = extractUserFromResponse(fallback as any);
+            if (fallbackUser) {
+              onSuccess?.(fallbackUser);
+            } else {
+              setError(fallback.message || 'Đăng nhập thành công nhưng hệ thống chưa trả về thông tin người dùng.');
+            }
+        }
       } else {
         setError(result.message || 'Có lỗi xảy ra');
       }

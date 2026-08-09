@@ -31,5 +31,7 @@ export async function apiRequest<T = unknown>(
   }
 
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  return (await response.json()) as ApiResponse<T>;
+  const json = await response.json().catch(() => ({}));
+  // Attach HTTP status to help callers handle 4xx/5xx specially
+  return { ...(json as ApiResponse<T>), status: response.status } as ApiResponse<T> & { status?: number };
 }

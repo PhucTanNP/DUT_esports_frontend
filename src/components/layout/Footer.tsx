@@ -1,8 +1,14 @@
+"use client";
+import { useEffect, useState } from 'react';
 import logo from '../../images/logo.png';
 import '../../styles/Footer.css';
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear();
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   return (
     <footer className="footer">
@@ -86,7 +92,7 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="footer-bottom-inner">
           <p className="footer-copy">
-            &copy; {currentYear} <span className="copy-brand">CLB Thể thao điện tử DUT ESPORTS</span>. Tất cả quyền được bảo lưu.
+            &copy; {currentYear ?? '2026'} <span className="copy-brand">CLB Thể thao điện tử DUT ESPORTS</span>. Tất cả quyền được bảo lưu.
           </p>
           <div className="footer-bottom-links">
             <a href="#">Chính sách bảo mật</a>
