@@ -10,10 +10,16 @@ export const getAuthToken = (): string | null => localStorage.getItem('auth_toke
 export const setAuthToken = (token: string): void => localStorage.setItem('auth_token', token);
 export const removeAuthToken = (): void => localStorage.removeItem('auth_token');
 
-export const getAuthHeader = (): Record<string, string> => ({
-  Authorization: `Bearer ${getAuthToken()}`,
-  'Content-Type': 'application/json',
-});
+export const getAuthHeader = (): Record<string, string> => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token && token !== 'null' && token !== 'undefined') {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 /**
  * Request wrapper — tự gắn API_BASE, tự set Content-Type JSON,
@@ -32,6 +38,11 @@ export async function apiRequest<T = unknown>(
 
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
   const json = await response.json().catch(() => ({}));
-  // Attach HTTP status to help callers handle 4xx/5xx specially
-  return { ...(json as ApiResponse<T>), status: response.status } as ApiResponse<T> & { status?: number };
+  const isOk = response.ok;
+  
+  return {
+    success: typeof json.success === 'boolean' ? json.success : isOk,
+    ...json,
+    status: response.status,
+  } as ApiResponse<T> & { status?: number };
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { authAPI, extractUserFromResponse } from '../services/auth.service';
+import { useRouter } from 'next/navigation';
+import { authAPI, extractUserFromResponse, getRedirectUrl } from '../services/auth.service';
 import type { SafeUser } from '../types';
 import '../styles/StudentAuth.css';
 
@@ -32,9 +33,11 @@ interface StudentAuthProps {
 }
 
 export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
+  const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [registerType, setRegisterType] = useState<RegisterType>('student');
   const [open, setOpen] = useState(true);
+  const [loginIdentifier, setLoginIdentifier] = useState('');
   const [studentId, setStudentId] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -59,6 +62,7 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
   };
 
   const resetForm = () => {
+    setLoginIdentifier('');
     setStudentId('');
     setUsername('');
     setPassword('');
@@ -95,6 +99,72 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
     e.preventDefault();
     setError('');
 
+    if (mode === 'login') {
+      const identifier = loginIdentifier.trim();
+      if (!identifier || !password) {
+        setError('Vui lòng nhập tên đăng nhập/MSSV và mật khẩu');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        let result;
+        const isNumeric = /^\d+$/.test(identifier);
+
+        if (isNumeric) {
+          result = await authAPI.studentLogin(identifier, password);
+          if (!result.success) {
+            const freeRes = await authAPI.freeLogin(identifier, password);
+            if (freeRes.success) {
+              result = freeRes;
+            }
+          }
+        } else {
+          result = await authAPI.freeLogin(identifier, password);
+          if (!result.success) {
+            const stdRes = await authAPI.login(identifier, password);
+            if (stdRes.success) {
+              result = stdRes;
+            }
+          }
+        }
+
+        if (result.success) {
+          const user = extractUserFromResponse(result);
+          const redirectUrl = getRedirectUrl(result, user);
+
+          if (redirectUrl) {
+            window.location.href = redirectUrl;
+            return;
+          }
+
+          if (user) {
+            onSuccess?.(user);
+          } else {
+            const fallback = await authAPI.getCurrentStudentProfile();
+            const fallbackUser = extractUserFromResponse(fallback as any);
+            const fallbackRedirect = fallbackUser ? getRedirectUrl(fallback, fallbackUser) : null;
+            if (fallbackRedirect) {
+              window.location.href = fallbackRedirect;
+              return;
+            }
+            if (fallbackUser) {
+              onSuccess?.(fallbackUser);
+            } else {
+              setError(fallback.message || 'Đăng nhập thành công nhưng hệ thống chưa trả về thông tin người dùng.');
+            }
+          }
+        } else {
+          setError(result.message || 'Tên đăng nhập/MSSV hoặc mật khẩu không chính xác');
+        }
+      } catch (err) {
+        setError('Lỗi kết nối: ' + (err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     if (mode === 'register') {
       if (!fullName.trim()) {
         setError('Vui lòng nhập họ và tên');
@@ -114,17 +184,10 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
       }
     }
 
-    if (mode === 'login' && (!normalizedStudentId || !password)) {
-      setError('Vui lòng nhập mã số sinh viên và mật khẩu');
-      return;
-    }
-
     setLoading(true);
     try {
       let result;
-      if (mode === 'login') {
-        result = await authAPI.studentLogin(normalizedStudentId, password);
-      } else if (isStudentRegister) {
+      if (isStudentRegister) {
         if (!normalizedStudentId) {
           setError('Vui lòng nhập mã số sinh viên');
           return;
@@ -171,16 +234,28 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
 
       if (result.success) {
         const user = extractUserFromResponse(result);
+        const redirectUrl = getRedirectUrl(result, user);
+
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+          return;
+        }
+
         if (user) {
           onSuccess?.(user);
         } else {
           const fallback = await authAPI.getCurrentStudentProfile();
-            const fallbackUser = extractUserFromResponse(fallback as any);
-            if (fallbackUser) {
-              onSuccess?.(fallbackUser);
-            } else {
-              setError(fallback.message || 'Đăng nhập thành công nhưng hệ thống chưa trả về thông tin người dùng.');
-            }
+          const fallbackUser = extractUserFromResponse(fallback as any);
+          const fallbackRedirect = fallbackUser ? getRedirectUrl(fallback, fallbackUser) : null;
+          if (fallbackRedirect) {
+            window.location.href = fallbackRedirect;
+            return;
+          }
+          if (fallbackUser) {
+            onSuccess?.(fallbackUser);
+          } else {
+            setError(fallback.message || 'Đăng nhập thành công nhưng hệ thống chưa trả về thông tin người dùng.');
+          }
         }
       } else {
         setError(result.message || 'Có lỗi xảy ra');
@@ -197,7 +272,7 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
       <div className="sa-card" onClick={(e) => e.stopPropagation()}>
         <div className="sa-header">
           <div className="sa-logo">🎓</div>
-          <h2>{mode === 'login' ? 'Đăng Nhập Sinh Viên' : getRegisterTitle()}</h2>
+          <h2>{mode === 'login' ? 'Đăng Nhập' : getRegisterTitle()}</h2>
           <p>CLB Thể thao điện tử DUT ESPORTS</p>
           <button className="sa-close" onClick={handleClose} aria-label="Đóng" type="button">
             ✕
@@ -224,18 +299,18 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
         <form onSubmit={handleSubmit} className="sa-form">
           {mode === 'login' ? (
             <div className="sa-field">
-              <label>🎓 Mã Số Sinh Viên *</label>
+              <label>👤 Tên đăng nhập hoặc MSSV *</label>
               <input
                 type="text"
-                value={studentId}
-                onChange={(e) => handleStudentIdChange(e.target.value)}
-                placeholder="VD: 2210123456"
+                value={loginIdentifier}
+                onChange={(e) => setLoginIdentifier(e.target.value)}
+                placeholder="VD: 2210123456 hoặc nguyenvana"
                 required
                 disabled={loading}
-                inputMode="numeric"
-                pattern="[0-9]*"
+                autoCapitalize="none"
+                autoComplete="username"
               />
-              <small>Chỉ nhập số. Đây cũng là tên đăng nhập của sinh viên.</small>
+              <small>Nhập Mã số sinh viên (DUT) hoặc Tên đăng nhập tài khoản tự do.</small>
             </div>
           ) : (
             <>

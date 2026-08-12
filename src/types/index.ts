@@ -23,6 +23,9 @@ export interface SafeUser {
   course: string | null;
   role: UserRole;
   is_active: boolean;
+  is_banned?: boolean;
+  ban_reason?: string | null;
+  banned_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -105,6 +108,7 @@ export interface ApiResponse<T = unknown> {
   message?: string;
   data?: T;
   token?: string;
+  redirectTo?: string;
   user?: SafeUser;
   tournament?: Partial<Tournament>;
   pagination?: Pagination;

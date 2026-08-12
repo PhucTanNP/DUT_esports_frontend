@@ -1,22 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authAPI, getAuthToken, removeAuthToken } from '../../services/auth.service';
+import { authAPI, extractUserFromResponse, getAuthToken, removeAuthToken } from '../../services/auth.service';
 import type { SafeUser } from '../../types';
 import '../../styles/admin/AdminDashboard.css';
 import AdminLogin from './AdminLogin';
 import AdminOverview from './AdminOverview';
 import CTVDashboard from './CTVDashboard';
+import CTVManager from './CTVManager';
+import ParticipantManager from './ParticipantManager';
 import TournamentManager from './TournamentManager';
-import UserManagement from './UserManagement';
 
 const menuItems = [
   { id: 'overview', label: 'Tổng Quan', icon: '📊' },
-  { id: 'users', label: 'Quản Lý Người Dùng', icon: '👤' },
+  { id: 'ctv', label: 'Quản Lý CTV', icon: '👥' },
+  { id: 'participants', label: 'Quản Lý Người Dùng', icon: '👤' },
   { id: 'tournaments', label: 'Quản Lý Giải Đấu', icon: '🏆' },
 ];
 
-type SectionId = 'overview' | 'users' | 'tournaments';
+type SectionId = 'overview' | 'ctv' | 'participants' | 'tournaments';
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -32,17 +34,51 @@ export default function AdminDashboard() {
       if (token) {
         try {
           const result = await authAPI.getCurrentUser();
-          if (result.success) {
-            setUser(result.data ?? null);
+          const userObj = extractUserFromResponse(result) ?? (result.data as SafeUser | null) ?? (result.user as SafeUser | null);
+          if (result.success && userObj) {
+            setUser(userObj);
             setIsLoggedIn(true);
+          } else {
+            const cached = localStorage.getItem('admin_user') || localStorage.getItem('student_user');
+            if (cached) {
+              try {
+                setUser(JSON.parse(cached));
+                setIsLoggedIn(true);
+              } catch {
+                removeAuthToken();
+                setIsLoggedIn(false);
+              }
+            } else {
+              removeAuthToken();
+              setIsLoggedIn(false);
+            }
+          }
+        } catch (err) {
+          console.error('Auth check failed:', err);
+          const cached = localStorage.getItem('admin_user') || localStorage.getItem('student_user');
+          if (cached) {
+            try {
+              setUser(JSON.parse(cached));
+              setIsLoggedIn(true);
+            } catch {
+              removeAuthToken();
+              setIsLoggedIn(false);
+            }
           } else {
             removeAuthToken();
             setIsLoggedIn(false);
           }
-        } catch (err) {
-          console.error('Auth check failed:', err);
-          removeAuthToken();
-          setIsLoggedIn(false);
+        }
+      } else {
+        const cached = localStorage.getItem('admin_user');
+        if (cached) {
+          try {
+            const u = JSON.parse(cached);
+            if (u && (u.role === 'admin' || u.role === 'ctv')) {
+              setUser(u);
+              setIsLoggedIn(true);
+            }
+          } catch {}
         }
       }
       setLoading(false);
@@ -84,8 +120,10 @@ export default function AdminDashboard() {
     switch (activeSection) {
       case 'overview':
         return <AdminOverview />;
-      case 'users':
-        return <UserManagement />;
+      case 'ctv':
+        return <CTVManager />;
+      case 'participants':
+        return <ParticipantManager />;
       case 'tournaments':
         return <TournamentManager userRole={user?.role} />;
       default:

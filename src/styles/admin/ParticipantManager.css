@@ -1,0 +1,183 @@
+/* ===== PARTICIPANT MANAGER STYLES ===== */
+.participant-manager {
+  display: flex;
+  flex-direction: column;
+}
+
+/* User / Participant Cell */
+.participant-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.participant-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #00C6FF, #0072FF);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 198, 255, 0.25);
+}
+
+.participant-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.participant-name {
+  font-weight: 600;
+  color: #fff;
+}
+
+.participant-mssv {
+  font-size: 11px;
+  color: #00C6FF;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Academic Info */
+.academic-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.academic-faculty {
+  font-size: 13px;
+  color: #ddd;
+  font-weight: 500;
+}
+
+.academic-class {
+  font-size: 11px;
+  color: #888;
+}
+
+/* Status & Ban Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.status-active {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.status-banned {
+  background: rgba(239, 68, 68, 0.18);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+}
+
+.ban-reason-text {
+  display: block;
+  font-size: 11px;
+  color: #fca5a5;
+  margin-top: 4px;
+  font-style: italic;
+  max-width: 180px;
+  white-space: normal;
+}
+
+/* Action Buttons */
+.btn-ban {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-ban:hover {
+  background: rgba(239, 68, 68, 0.3);
+  transform: scale(1.1);
+}
+
+.btn-unban {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-unban:hover {
+  background: rgba(16, 185, 129, 0.3);
+  transform: scale(1.1);
+}
+
+/* Ban Modal Styling */
+.ban-modal {
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.ban-header {
+  border-bottom-color: rgba(239, 68, 68, 0.2);
+}
+
+.ban-header h3 {
+  color: #EF4444;
+}
+
+.btn-ban-confirm {
+  background: linear-gradient(135deg, #EF4444, #B91C1C);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-ban-confirm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+@media (max-width: 600px) {
+  .form-row {
+    flex-direction: column;
+  }
+}

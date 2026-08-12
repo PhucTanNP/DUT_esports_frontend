@@ -19,7 +19,7 @@ export const extractUserFromResponse = (response: ApiResponse<unknown>): SafeUse
     if (!candidate || typeof candidate !== 'object') continue;
 
     const maybeUser = candidate as Partial<SafeUser>;
-    if (maybeUser.full_name || maybeUser.student_id || maybeUser.id || maybeUser.username) {
+    if (maybeUser.full_name || maybeUser.student_id || maybeUser.id || maybeUser.username || maybeUser.role) {
       return maybeUser as SafeUser;
     }
   }
@@ -32,6 +32,29 @@ const persistStudentUser = (user: SafeUser | null) => {
   localStorage.setItem('student_user', JSON.stringify(user));
 };
 
+const persistAdminUser = (user: SafeUser | null, response?: ApiResponse<unknown>) => {
+  const role = user?.role?.toLowerCase();
+  const isAdminOrCtv = role === 'admin' || role === 'ctv' || response?.redirectTo === 'admin-dashboard' || response?.redirectTo === '/admin';
+  if (isAdminOrCtv) {
+    const adminObj = user ?? (response as any)?.user ?? (response as any)?.data ?? {};
+    localStorage.setItem('admin_user', JSON.stringify(adminObj));
+  }
+};
+
+export const getRedirectUrl = (response: ApiResponse<unknown>, user?: SafeUser | null): string | null => {
+  if (response.redirectTo === 'admin-dashboard' || response.redirectTo === '/admin') {
+    return '/admin';
+  }
+  if (response.redirectTo) {
+    return response.redirectTo.startsWith('/') ? response.redirectTo : `/${response.redirectTo}`;
+  }
+  const role = user?.role?.toLowerCase();
+  if (role === 'admin' || role === 'ctv') {
+    return '/admin';
+  }
+  return null;
+};
+
 const extractTokenFromResponse = (response: ApiResponse<unknown>): string | null => {
   const payload = response as ApiResponse<any>;
   if (typeof payload.token === 'string' && payload.token) return payload.token;
@@ -41,16 +64,25 @@ const extractTokenFromResponse = (response: ApiResponse<unknown>): string | null
 };
 
 export const authAPI = {
-  async login(email: string, password: string): Promise<ApiResponse<SafeUser>> {
+  async login(username: string, password: string): Promise<ApiResponse<SafeUser>> {
     const response = await apiRequest<SafeUser>('/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        username,
+        email: username,
+        identifier: username,
+        password,
+      }),
     });
+    const user = extractUserFromResponse(response);
     const token = extractTokenFromResponse(response);
-    if (response.success && token) {
-      setAuthToken(token);
-      localStorage.setItem('admin_user', JSON.stringify(response.user ?? response.data ?? {}));
+    if (response.success) {
+      if (token) {
+        setAuthToken(token);
+      }
+      persistStudentUser(user);
+      persistAdminUser(user, response);
     }
     return response;
   },
@@ -113,6 +145,23 @@ export const authAPI = {
     return response;
   },
 
+  /** Đăng nhập tài khoản tự do bằng tên đăng nhập + mật khẩu. */
+  async freeLogin(username: string, password: string): Promise<ApiResponse<SafeUser>> {
+    const response = await apiRequest<SafeUser>('/auth/free/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const user = extractUserFromResponse(response);
+    if (response.success) {
+      const token = extractTokenFromResponse(response);
+      if (token) setAuthToken(token);
+      persistStudentUser(user);
+      persistAdminUser(user, response);
+    }
+    return response;
+  },
+
   // ===========================
   // SINH VIÊN (mã số sinh viên)
   // ===========================
@@ -154,6 +203,7 @@ export const authAPI = {
       const token = extractTokenFromResponse(response);
       if (token) setAuthToken(token);
       persistStudentUser(user);
+      persistAdminUser(user, response);
     }
     return response;
   },

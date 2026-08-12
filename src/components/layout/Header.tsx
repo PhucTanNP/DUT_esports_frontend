@@ -26,12 +26,19 @@ export default function Header() {
     setStudent(user);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('student_user', JSON.stringify(user));
+      const role = user.role?.toLowerCase();
+      if (role === 'admin' || role === 'ctv') {
+        window.localStorage.setItem('admin_user', JSON.stringify(user));
+        window.location.href = '/admin';
+        return;
+      }
     }
     setShowAuth(false);
   };
 
   const handleLogout = () => {
     localStorage.removeItem('student_user');
+    localStorage.removeItem('admin_user');
     localStorage.removeItem('auth_token');
     setStudent(null);
     setMenuOpen(false);
@@ -116,6 +123,11 @@ export default function Header() {
 
                 {menuOpen && (
                   <div className="header-user-menu">
+                    {(student.role === 'admin' || student.role === 'ctv') && (
+                      <a href="/admin" className="header-user-option" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                        ⚡ Dashboard Admin
+                      </a>
+                    )}
                     <button className="header-user-option" type="button" onClick={() => handleMenuAction('profile')}>
                       👤 Thông tin cá nhân
                     </button>
