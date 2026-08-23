@@ -1,0 +1,599 @@
+/* =========================================================
+   STATUS PAGES STYLING (PENDING, REJECTED, UPDATE REGISTRATION)
+   DUT Esports Tournament Platform — Modern Dark Cyberpunk / Gaming UI
+   ========================================================= */
+
+.status-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(circle at 50% 20%, #151a30 0%, #0a0d1e 100%);
+  color: #f8fafc;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.status-page-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1000px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.08) 0%, rgba(99, 102, 241, 0.05) 50%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.status-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.status-card {
+  width: 100%;
+  max-width: 680px;
+  background: rgba(18, 24, 43, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 107, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+  animation: cardFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.status-card.wide {
+  max-width: 820px;
+}
+
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================================
+   PENDING APPROVAL PAGE SPECIFIC STYLES
+   ========================================================= */
+
+.status-card-pending {
+  border-color: rgba(251, 191, 36, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 35px rgba(245, 158, 11, 0.15);
+}
+
+.status-icon-pending-wrap {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 24px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.04) 70%);
+  border: 2px solid rgba(245, 158, 11, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+}
+
+.status-icon-pending {
+  font-size: 42px;
+  animation: pendingPulse 2.4s infinite ease-in-out;
+}
+
+@keyframes pendingPulse {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(180deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  75% {
+    transform: rotate(360deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+}
+
+.status-badge-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.status-badge-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.status-badge-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+  animation: blink 1.5s infinite ease-in-out;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.status-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+
+.status-desc-highlight {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  text-align: center;
+  margin-bottom: 28px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.status-details-box {
+  background: rgba(10, 14, 28, 0.6);
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status-details-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+
+.status-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.status-info-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.status-info-value {
+  font-size: 14px;
+  color: #f1f5f9;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* =========================================================
+   REJECTED PAGE SPECIFIC STYLES
+   ========================================================= */
+
+.status-card-rejected {
+  border-color: rgba(239, 68, 68, 0.3);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 35px rgba(239, 68, 68, 0.2);
+}
+
+.status-icon-rejected-wrap {
+  width: 90px;
+  height: 90px;
+  margin: 0 auto 24px auto;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.05) 70%);
+  border: 2px solid rgba(239, 68, 68, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.35);
+  animation: rejectedShake 3s infinite ease-in-out;
+}
+
+.status-icon-rejected {
+  font-size: 44px;
+}
+
+@keyframes rejectedShake {
+  0%, 100% { transform: scale(1); }
+  10%, 14% { transform: scale(1.08) rotate(-3deg); }
+  12%, 16% { transform: scale(1.08) rotate(3deg); }
+  18% { transform: scale(1) rotate(0deg); }
+}
+
+/* Khối lý do từ chối */
+.status-reason-box {
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-reason-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fca5a5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-reason-text {
+  font-size: 15px;
+  line-height: 1.5;
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 12px 16px;
+  border-radius: 8px;
+  border-left: 4px solid #ef4444;
+}
+
+/* CẢNH BÁO MÀU ĐỎ HẠN XÓA 3 NGÀY */
+.status-danger-alert {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.25), rgba(153, 27, 27, 0.35));
+  border: 1.5px solid #ef4444;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 28px;
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+  position: relative;
+}
+
+.status-danger-alert-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.status-danger-alert-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #fecaca;
+  margin: 0;
+}
+
+.status-danger-alert-time {
+  font-weight: 800;
+  color: #fef08a;
+  text-decoration: underline;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.status-countdown-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 4px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fef08a;
+  border: 1px solid rgba(254, 240, 138, 0.3);
+}
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.status-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.status-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+  width: 100%;
+}
+
+.status-btn-primary {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff8c00 100%);
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(255, 107, 0, 0.35);
+}
+
+.status-btn-primary:hover {
+  background: linear-gradient(135deg, #ff8c00 0%, #ffa500 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.45);
+}
+
+.status-btn-primary:active {
+  transform: translateY(0);
+}
+
+.status-btn-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.status-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.status-btn-danger-outline {
+  background: transparent;
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-btn-danger-outline:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* =========================================================
+   FORM UPDATE REGISTRATION (/update-registration)
+   ========================================================= */
+
+.update-reg-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.update-reg-header h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 8px;
+}
+
+.update-reg-header p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+}
+
+.update-reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.update-reg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.update-reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.update-reg-field.full-width {
+  grid-column: 1 / -1;
+}
+
+.update-reg-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.update-reg-field label span.req {
+  color: #ff6b00;
+}
+
+.update-reg-input,
+.update-reg-select,
+.update-reg-textarea {
+  background: rgba(10, 14, 28, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.update-reg-input:focus,
+.update-reg-select:focus,
+.update-reg-textarea:focus {
+  border-color: #ff6b00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15);
+  background: rgba(10, 14, 28, 0.9);
+}
+
+.update-reg-input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Upload zone */
+.update-upload-section {
+  background: rgba(10, 14, 28, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin: 6px 0;
+}
+
+.update-upload-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.update-upload-subtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.update-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.update-upload-box {
+  border: 2px dashed rgba(255, 255, 255, 0.15);
+  background: rgba(18, 24, 43, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: center;
+}
+
+.update-upload-box:hover {
+  border-color: #ff6b00;
+  background: rgba(255, 107, 0, 0.04);
+}
+
+.update-upload-box.has-preview {
+  border-style: solid;
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.update-upload-preview {
+  width: 100%;
+  height: 130px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.update-upload-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
+/* Alert notifications */
+.update-alert {
+  padding: 14px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: cardFadeIn 0.3s ease;
+}
+
+.update-alert-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+}
+
+.update-alert-success {
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  color: #86efac;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .status-card {
+    padding: 24px 20px;
+  }
+
+  .status-title {
+    font-size: 22px;
+  }
+
+  .update-reg-grid,
+  .update-upload-grid {
+    grid-template-columns: 1fr;
+  }
+}

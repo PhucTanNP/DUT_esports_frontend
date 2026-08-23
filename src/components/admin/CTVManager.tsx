@@ -79,7 +79,7 @@ export default function CTVManager() {
       full_name: ctv.full_name,
       email: ctv.email ?? '',
       password: '',
-      is_active: ctv.is_active,
+      is_active: ctv.is_active ?? true,
     });
     setEditingCTV(ctv.id);
     setShowModal(true);

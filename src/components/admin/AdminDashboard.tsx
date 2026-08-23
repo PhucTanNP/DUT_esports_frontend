@@ -30,47 +30,66 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
+      // Dọn dẹp bất kỳ thông tin admin cũ nào trong localStorage để đảm bảo bảo mật
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_user');
+      }
+
       const token = getAuthToken();
       if (token) {
         try {
           const result = await authAPI.getCurrentUser();
           const userObj = extractUserFromResponse(result) ?? (result.data as SafeUser | null) ?? (result.user as SafeUser | null);
-          if (result.success && userObj) {
+          const role = userObj?.role?.toLowerCase();
+          if (result.success && userObj && (role === 'admin' || role === 'ctv')) {
             setUser(userObj);
             setIsLoggedIn(true);
+            sessionStorage.setItem('admin_user', JSON.stringify(userObj));
           } else {
-            const cached = localStorage.getItem('admin_user') || localStorage.getItem('student_user');
+            const cached = sessionStorage.getItem('admin_user');
             if (cached) {
               try {
-                setUser(JSON.parse(cached));
-                setIsLoggedIn(true);
+                const u = JSON.parse(cached);
+                if (u && (u.role === 'admin' || u.role === 'ctv')) {
+                  setUser(u);
+                  setIsLoggedIn(true);
+                } else {
+                  authAPI.logout();
+                  setIsLoggedIn(false);
+                }
               } catch {
-                removeAuthToken();
+                authAPI.logout();
                 setIsLoggedIn(false);
               }
             } else {
-              removeAuthToken();
+              authAPI.logout();
               setIsLoggedIn(false);
             }
           }
         } catch (err) {
           console.error('Auth check failed:', err);
-          const cached = localStorage.getItem('admin_user') || localStorage.getItem('student_user');
+          const cached = sessionStorage.getItem('admin_user');
           if (cached) {
             try {
-              setUser(JSON.parse(cached));
-              setIsLoggedIn(true);
+              const u = JSON.parse(cached);
+              if (u && (u.role === 'admin' || u.role === 'ctv')) {
+                setUser(u);
+                setIsLoggedIn(true);
+              } else {
+                authAPI.logout();
+                setIsLoggedIn(false);
+              }
             } catch {
-              removeAuthToken();
+              authAPI.logout();
               setIsLoggedIn(false);
             }
           } else {
-            removeAuthToken();
+            authAPI.logout();
             setIsLoggedIn(false);
           }
         }
       } else {
-        const cached = localStorage.getItem('admin_user');
+        const cached = sessionStorage.getItem('admin_user');
         if (cached) {
           try {
             const u = JSON.parse(cached);
@@ -90,6 +109,10 @@ export default function AdminDashboard() {
   const handleLoginSuccess = (userData: SafeUser) => {
     setUser(userData);
     setIsLoggedIn(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('admin_user', JSON.stringify(userData));
+      localStorage.removeItem('admin_user');
+    }
   };
 
   const handleLogout = () => {

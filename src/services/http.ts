@@ -6,9 +6,27 @@ export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://loca
 // ===========================
 // TOKEN MANAGEMENT
 // ===========================
-export const getAuthToken = (): string | null => localStorage.getItem('auth_token');
-export const setAuthToken = (token: string): void => localStorage.setItem('auth_token', token);
-export const removeAuthToken = (): void => localStorage.removeItem('auth_token');
+export const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+};
+
+export const setAuthToken = (token: string, sessionOnly: boolean = false): void => {
+  if (typeof window === 'undefined') return;
+  if (sessionOnly) {
+    sessionStorage.setItem('auth_token', token);
+    localStorage.removeItem('auth_token');
+  } else {
+    localStorage.setItem('auth_token', token);
+    sessionStorage.removeItem('auth_token');
+  }
+};
+
+export const removeAuthToken = (): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_token');
+};
 
 export const getAuthHeader = (): Record<string, string> => {
   const token = getAuthToken();

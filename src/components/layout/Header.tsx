@@ -3,43 +3,63 @@
 import { useEffect, useState } from 'react';
 import logo from '../../images/logo.png';
 import StudentAuth from '../StudentAuth';
+import { authAPI } from '../../services/auth.service';
 import type { SafeUser } from '../../types';
 import '../../styles/Header.css';
 
-export default function Header() {
+interface HeaderProps {
+  user?: SafeUser | null;
+  onLoginClick?: () => void;
+  onLogoutClick?: () => void;
+}
+
+export default function Header({ user: propUser, onLoginClick, onLogoutClick }: HeaderProps = {}) {
   const [showAuth, setShowAuth] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
-  const [student, setStudent] = useState<SafeUser | null>(null);
+  const [student, setStudent] = useState<SafeUser | null>(propUser || null);
 
   useEffect(() => {
+    if (propUser !== undefined) {
+      setStudent(propUser);
+      return;
+    }
     try {
-      const raw = window.localStorage.getItem('student_user');
+      const adminRaw = typeof window !== 'undefined' ? window.sessionStorage.getItem('admin_user') : null;
+      const studentRaw = typeof window !== 'undefined' ? (window.localStorage.getItem('student_user') || window.sessionStorage.getItem('student_user')) : null;
+      const raw = adminRaw || studentRaw;
       setStudent(raw ? (JSON.parse(raw) as SafeUser) : null);
     } catch {
       setStudent(null);
     }
-  }, []);
+  }, [propUser]);
 
   const handleAuthSuccess = (user: SafeUser) => {
     setStudent(user);
+    const role = user.role?.toLowerCase();
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem('student_user', JSON.stringify(user));
-      const role = user.role?.toLowerCase();
       if (role === 'admin' || role === 'ctv') {
-        window.localStorage.setItem('admin_user', JSON.stringify(user));
+        window.sessionStorage.setItem('admin_user', JSON.stringify(user));
+        window.sessionStorage.setItem('student_user', JSON.stringify(user));
+        window.localStorage.removeItem('admin_user');
+        window.localStorage.removeItem('student_user');
         window.location.href = '/admin';
         return;
+      } else {
+        window.localStorage.setItem('student_user', JSON.stringify(user));
+        window.sessionStorage.removeItem('admin_user');
       }
     }
     setShowAuth(false);
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('student_user');
-    localStorage.removeItem('admin_user');
-    localStorage.removeItem('auth_token');
+    if (onLogoutClick) {
+      onLogoutClick();
+      return;
+    }
+    authAPI.logout();
     setStudent(null);
     setMenuOpen(false);
     setProfileOpen(false);
@@ -48,8 +68,7 @@ export default function Header() {
 
   const handleMenuAction = (action: 'profile' | 'tournaments' | 'password') => {
     if (action === 'profile') {
-      setProfileOpen(true);
-      setStatusMessage('');
+      window.location.href = '/profile';
     } else {
       setProfileOpen(false);
       setStatusMessage(action === 'tournaments'
@@ -57,6 +76,7 @@ export default function Header() {
         : 'Tính năng đổi mật khẩu sẽ được cập nhật trong thời gian tới.');
     }
   };
+
 
   const profileItems = student
     ? [
