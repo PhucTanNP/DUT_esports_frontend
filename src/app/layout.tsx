@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import '../styles/tokens.css';
 import '../styles/global.css';
 import '../App.css';
+import { AppProviders } from '@/providers/app-providers';
 
 export const metadata: Metadata = {
   title: 'DUT Esports — Nền tảng giải đấu',
@@ -15,7 +16,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
-      <body suppressHydrationWarning>{children}</body>
+      <body>
+        <AppProviders>{children}</AppProviders>
+      </body>
     </html>
   );
 }

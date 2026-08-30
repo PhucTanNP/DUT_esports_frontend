@@ -1091,7 +1091,7 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                 <div className="fb-field-list">
                   {(form.form_schema || []).length === 0 ? (
                     <div className="fb-empty">
-                      <p>📝 Chưa có trường nào. Nhấn "+ Thêm trường" để bắt đầu thiết kế form.</p>
+                      <p>📝 Chưa có trường nào. Nhấn {'"+ Thêm trường"'} để bắt đầu thiết kế form.</p>
                     </div>
                   ) : (
                     (form.form_schema || []).map((field, idx) => (
