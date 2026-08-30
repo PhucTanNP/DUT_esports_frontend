@@ -162,7 +162,7 @@
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
 }
 
-.card-header {
+.tournament-card .card-header {
   display: flex;
   gap: 12px;
   padding: 16px;

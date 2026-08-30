@@ -23,9 +23,6 @@ export interface ParticipantRow {
   university_name?: string | null;
   full_name: string;
   status: ParticipantStatus;
-  cccd_number?: string | null;
-  cccd_front_url?: string | null;
-  cccd_back_url?: string | null;
   username?: string | null;
   student_id?: string | null;
   class_name?: string | null;
@@ -42,15 +39,12 @@ export interface ParticipantRow {
 }
 
 export interface RegisterParticipantPayload {
-  account_type?: 'dut_student' | 'external';
+  account_type?: 'internal' | 'external' | 'dut_student';
   email: string;
   phone_number?: string;
   university_name?: string;
   password: string;
   full_name: string;
-  cccd_number?: string;
-  cccd_front_url?: string;
-  cccd_back_url?: string;
   username?: string | null;
   student_id?: string | null;
   class_name?: string | null;
@@ -59,46 +53,44 @@ export interface RegisterParticipantPayload {
   selfie_with_student_card_url?: string | null;
 }
 
-export interface SwitchAccountTypePayload {
-  target_account_type: 'dut_student' | 'external';
-  username?: string | null;
-  student_id?: string | null;
-  class_name?: string | null;
-  faculty_name?: string | null;
-  student_card_url?: string | null;
-  selfie_with_student_card_url?: string | null;
+export interface UpdateProfilePayload {
+  full_name?: string;
+  phone_number?: string;
+  class_name?: string;
+  faculty_name?: string;
+  old_password?: string;
+  password?: string;
 }
 
 export interface ResubmitPayload {
+  identifier?: string;
+  password?: string;
   full_name?: string;
   phone_number?: string;
   university_name?: string;
-  cccd_number?: string;
-  cccd_front_url?: string;
-  cccd_back_url?: string;
   username?: string | null;
   student_id?: string | null;
   class_name?: string | null;
   faculty_name?: string | null;
   student_card_url?: string | null;
   selfie_with_student_card_url?: string | null;
+  new_password?: string;
 }
 
 export const participantAPI = {
-  /** 1. Đăng ký tài khoản giải đấu (DUT Student hoặc External) */
+  /** 1. [SV-01] Đăng ký tài khoản sinh viên giải đấu (KYC 2 ảnh thẻ SV) */
   async register(data: RegisterParticipantPayload): Promise<ApiResponse<ParticipantRow>> {
-    const res = await apiRequest<ParticipantRow>('/participants/register', {
+    const res = await apiRequest<ParticipantRow>('/auth/student/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    // Không tự động đăng nhập khi đăng ký để trả người dùng về màn hình đăng nhập
     return res;
   },
 
-  /** 2. Đăng nhập thí sinh bằng Email, MSSV, Username hoặc CCCD */
+  /** 2. [SV-02] Đăng nhập thí sinh bằng Email, MSSV hoặc Username */
   async login(login_identifier: string, password: string): Promise<ApiResponse<ParticipantRow>> {
-    const res = await apiRequest<ParticipantRow>('/participants/login', {
+    const res = await apiRequest<ParticipantRow>('/auth/student/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ login_identifier, password }),
@@ -113,18 +105,39 @@ export const participantAPI = {
     return res;
   },
 
-  /** 3. Lấy hồ sơ tài khoản hiện tại */
+  /** 3. [SV-03] Lấy hồ sơ tài khoản hiện tại */
   async getMyProfile(): Promise<ApiResponse<ParticipantRow>> {
-    const res = await apiRequest<ParticipantRow>('/participants/me', { headers: getAuthHeader() });
+    const res = await apiRequest<ParticipantRow>('/auth/participant/me', { headers: getAuthHeader() });
     if (res.success && res.data) {
       localStorage.setItem('student_user', JSON.stringify(res.data));
     }
     return res;
   },
 
-  /** 4. Chuyển đổi loại tài khoản (Switch Type) */
-  async switchAccountType(data: SwitchAccountTypePayload): Promise<ApiResponse<ParticipantRow>> {
-    const res = await apiRequest<ParticipantRow>('/participants/switch-type', {
+  /** 4. [SV-03] Cập nhật hồ sơ cá nhân */
+  async updateProfile(data: UpdateProfilePayload): Promise<ApiResponse<ParticipantRow>> {
+    const res = await apiRequest<ParticipantRow>('/auth/participant/profile', {
+      method: 'PUT',
+      headers: getAuthHeader(),
+      body: JSON.stringify(data),
+    });
+    if (res.success && res.data) {
+      localStorage.setItem('student_user', JSON.stringify(res.data));
+    }
+    return res;
+  },
+
+  /** Chuyển đổi loại tài khoản (Switch Type) */
+  async switchAccountType(data: {
+    target_account_type: 'internal' | 'external' | 'dut_student';
+    username?: string | null;
+    student_id?: string | null;
+    class_name?: string | null;
+    faculty_name?: string | null;
+    student_card_url?: string | null;
+    selfie_with_student_card_url?: string | null;
+  }): Promise<ApiResponse<ParticipantRow>> {
+    const res = await apiRequest<ParticipantRow>('/auth/participant/resubmit', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify(data),
@@ -135,9 +148,9 @@ export const participantAPI = {
     return res;
   },
 
-  /** 5. Cập nhật / nộp lại hồ sơ khi bị từ chối (Re-submit) */
+  /** 5. [SV-04] Cập nhật / nộp lại hồ sơ khi bị từ chối (Re-submit) */
   async resubmit(data: ResubmitPayload): Promise<ApiResponse<ParticipantRow>> {
-    const res = await apiRequest<ParticipantRow>('/participants/re-submit', {
+    const res = await apiRequest<ParticipantRow>('/auth/participant/resubmit', {
       method: 'POST',
       headers: getAuthHeader(),
       body: JSON.stringify(data),
@@ -148,7 +161,7 @@ export const participantAPI = {
     return res;
   },
 
-  /** 6. Upload ảnh giấy tờ (CCCD, Thẻ sinh viên, Selfie) */
+  /** 6. Upload ảnh thẻ sinh viên xác thực (SV-01, SV-04) */
   async uploadDocument(file: File): Promise<{ success: boolean; url?: string; message?: string }> {
     try {
       const formData = new FormData();
@@ -172,7 +185,7 @@ export const participantAPI = {
     }
   },
 
-  /** 7. Admin Kiểm duyệt hồ sơ (Phê duyệt / Từ chối kèm lý do) */
+  /** 7. [AD-02] Admin Kiểm duyệt hồ sơ (Phê duyệt / Từ chối kèm lý do) */
   async review(
     participant_id: string,
     action: 'approve' | 'reject',
@@ -185,7 +198,7 @@ export const participantAPI = {
     });
   },
 
-  /** 8. Lấy danh sách participants cho Admin (hỗ trợ lọc status, type, search) */
+  /** 8. Lấy danh sách participants cho Admin */
   async getAll(
     search = '',
     accountTypeFilter = 'all',
@@ -234,4 +247,3 @@ export const participantAPI = {
     });
   },
 };
-

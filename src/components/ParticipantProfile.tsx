@@ -311,30 +311,6 @@ export default function ParticipantProfile({ initialUser, onLogout }: Participan
                 />
               </div>
             )}
-
-            {profile.cccd_front_url && (
-              <div className="pp-doc-card">
-                <span>CCCD Mặt Trước</span>
-                <img
-                  src={profile.cccd_front_url}
-                  alt="CCCD Mặt trước"
-                  className="pp-doc-img"
-                  onClick={() => setZoomImage({ url: profile.cccd_front_url!, title: 'CCCD Mặt Trước' })}
-                />
-              </div>
-            )}
-
-            {profile.cccd_back_url && (
-              <div className="pp-doc-card">
-                <span>CCCD Mặt Sau</span>
-                <img
-                  src={profile.cccd_back_url}
-                  alt="CCCD Mặt sau"
-                  className="pp-doc-img"
-                  onClick={() => setZoomImage({ url: profile.cccd_back_url!, title: 'CCCD Mặt Sau' })}
-                />
-              </div>
-            )}
           </div>
         </div>
       </div>
