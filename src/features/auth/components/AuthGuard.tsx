@@ -50,7 +50,7 @@ export function AuthGuard({ children, allowedRoles = ['admin', 'ctv'], redirectT
   }
 
   const currentUser = user ?? data?.user ?? null;
-  if (currentUser && !allowedRoles.includes(currentUser.role)) {
+  if (currentUser && (!currentUser.role || !allowedRoles.includes(currentUser.role))) {
     return null; // useEffect sẽ redirect
   }
 

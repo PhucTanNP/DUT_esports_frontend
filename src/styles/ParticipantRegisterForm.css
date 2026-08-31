@@ -1,0 +1,336 @@
+/* DUT Esports - Dynamic Participant Register Form Styling */
+
+.prf-container {
+  width: 100%;
+  max-width: 680px;
+  margin: 0 auto;
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 107, 0, 0.25);
+  border-radius: 20px;
+  padding: 32px;
+  color: #ffffff;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 107, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.prf-container::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(255, 107, 0, 0.18) 0%, rgba(0,0,0,0) 70%);
+  pointer-events: none;
+}
+
+.prf-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.prf-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: rgba(255, 107, 0, 0.12);
+  border: 1px solid rgba(255, 107, 0, 0.3);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ff8c00;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.prf-header h2 {
+  font-size: 26px;
+  font-weight: 900;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.5px;
+}
+
+.prf-header p {
+  color: #94a3b8;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Account Type Selector Tabs */
+.prf-type-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  background: rgba(11, 14, 36, 0.8);
+  padding: 6px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 24px;
+}
+
+.prf-type-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.prf-type-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.prf-type-btn.active {
+  background: linear-gradient(135deg, rgba(255, 107, 0, 0.25), rgba(255, 71, 87, 0.15));
+  border-color: #ff6b00;
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.2);
+}
+
+.prf-type-icon {
+  font-size: 20px;
+}
+
+/* Form Styles */
+.prf-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.prf-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #00c6ff;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 10px;
+}
+
+.prf-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .prf-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prf-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prf-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.prf-group input,
+.prf-group select {
+  width: 100%;
+  padding: 12px 14px;
+  background: #0b0e24;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #ffffff;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.prf-group input:focus,
+.prf-group select:focus {
+  border-color: #ff6b00;
+  box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2);
+  background: #111638;
+}
+
+.prf-group select option {
+  background: #0b0e24;
+  color: #ffffff;
+}
+
+.prf-hint {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* Upload Card & Dropzone */
+.prf-upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 600px) {
+  .prf-upload-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.prf-upload-box {
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  padding: 14px;
+  background: rgba(11, 14, 36, 0.5);
+  text-align: center;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.prf-upload-box:hover {
+  border-color: #00c6ff;
+  background: rgba(0, 198, 255, 0.05);
+}
+
+.prf-upload-box.has-image {
+  border-style: solid;
+  border-color: rgba(34, 197, 94, 0.5);
+  padding: 6px;
+}
+
+.prf-upload-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+
+.prf-preview-img {
+  width: 100%;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.prf-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.prf-upload-icon {
+  font-size: 28px;
+}
+
+.prf-upload-btn-mini {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #cbd5e1;
+  margin-top: 4px;
+}
+
+.prf-file-input {
+  display: none;
+}
+
+/* Alert Messages */
+.prf-error-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #fca5a5;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.prf-success-banner {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #86efac;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Submit Button */
+.prf-submit-btn {
+  background: linear-gradient(135deg, #ff6b00 0%, #ff4757 100%);
+  color: #ffffff;
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(255, 107, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prf-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(255, 107, 0, 0.5);
+  filter: brightness(1.1);
+}
+
+.prf-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.prf-spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: prf-spin 0.8s linear infinite;
+}
+
+@keyframes prf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

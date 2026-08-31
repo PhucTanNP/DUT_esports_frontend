@@ -1,0 +1,432 @@
+/* DUT Esports - Participant Profile & Re-submit Styling */
+
+.pp-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+  color: #ffffff;
+}
+
+.pp-card {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 36px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Red Warning Banner for REJECTED Status */
+.pp-banner-rejected {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.25) 100%);
+  border: 2px solid #ef4444;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 30px;
+  box-shadow: 0 10px 30px rgba(239, 68, 68, 0.25);
+  animation: pp-pulse-border 2s infinite ease-in-out;
+}
+
+@keyframes pp-pulse-border {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+  }
+}
+
+.pp-banner-rejected-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pp-banner-rejected-icon {
+  font-size: 32px;
+}
+
+.pp-banner-rejected-title {
+  font-size: 20px;
+  font-weight: 900;
+  color: #f87171;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.pp-banner-rejected-body {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+  border-left: 4px solid #ef4444;
+  color: #fecaca;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.pp-banner-rejected-body strong {
+  color: #ffffff;
+}
+
+.pp-banner-rejected-action {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.pp-btn-resubmit {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.pp-btn-resubmit:hover {
+  background: linear-gradient(135deg, #f87171, #ef4444);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+}
+
+/* Banner for PENDING status */
+.pp-banner-pending {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #fde68a;
+}
+
+.pp-banner-pending-icon {
+  font-size: 32px;
+}
+
+.pp-banner-pending h3 {
+  margin: 0 0 4px 0;
+  color: #fbbf24;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.pp-banner-pending p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+/* Banner for APPROVED status */
+.pp-banner-approved {
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.5);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: #bbf7d0;
+}
+
+.pp-banner-approved-icon {
+  font-size: 32px;
+}
+
+.pp-banner-approved h3 {
+  margin: 0 0 4px 0;
+  color: #4ade80;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.pp-banner-approved p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 14px;
+}
+
+/* Profile Header */
+.pp-profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 28px;
+}
+
+.pp-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.pp-avatar {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 900;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(255, 107, 0, 0.4);
+}
+
+.pp-user-titles h1 {
+  margin: 0 0 6px 0;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.pp-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.pp-badge-type {
+  background: rgba(0, 198, 255, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(0, 198, 255, 0.3);
+}
+
+.pp-badge-pending {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.pp-badge-approved {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.pp-badge-rejected {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.pp-header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.pp-btn-switch {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.pp-btn-switch:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ff6b00;
+}
+
+/* Info Grid */
+.pp-info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 650px) {
+  .pp-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pp-info-item {
+  background: rgba(11, 14, 36, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.pp-info-item label {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pp-info-item span {
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* Document Gallery */
+.pp-docs-section {
+  margin-top: 24px;
+}
+
+.pp-docs-section h3 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #00c6ff;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pp-docs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.pp-doc-card {
+  background: rgba(11, 14, 36, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 10px;
+}
+
+.pp-doc-card span {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.pp-doc-img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.25s ease;
+}
+
+.pp-doc-img:hover {
+  transform: scale(1.03);
+}
+
+/* Modal Styling */
+.pp-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.pp-modal {
+  background: #0f172a;
+  border: 1px solid rgba(255, 107, 0, 0.4);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 640px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px;
+  color: #ffffff;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8);
+}
+
+.pp-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pp-modal-header h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+}
+
+.pp-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.pp-modal-close:hover {
+  color: #ffffff;
+}
+
+.pp-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.pp-btn-cancel {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pp-btn-save {
+  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  border: none;
+  color: #ffffff;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}

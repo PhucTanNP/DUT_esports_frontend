@@ -1,28 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { authAPI } from '../services/auth.service';
+import { useRouter } from 'next/navigation';
+import { authAPI, getRedirectUrl } from '../services/auth.service';
+import { participantAPI } from '../services/participant.service';
+import StudentRegistrationForm from './StudentRegistrationForm';
 import type { SafeUser } from '../types';
 import '../styles/StudentAuth.css';
-
-const STUDENT_FACULTY_BY_PREFIX: Record<string, string> = {
-  '101': 'Khoa Cơ Khí',
-  '102': 'Khoa Công Nghệ Thông Tin',
-  '103': 'Khoa Cơ Khí Giao Thông',
-  '104': 'Khoa Công Nghệ Nhiệt - Điện Lạnh',
-  '105': 'Khoa Điện',
-  '106': 'Khoa Điện Tử - Viễn Thông',
-  '107': 'Khoa Hóa',
-  '109': 'Khoa Xây Dựng Cầu Đường',
-  '110': 'Khoa Xây Dựng Dân Dụng & Công Nghiệp',
-  '111': 'Khoa Xây Dựng Công Trình Thủy',
-  '117': 'Khoa Môi Trường',
-  '118': 'Khoa Quản Lý Dự Án',
-  '121': 'Khoa Kiến Trúc',
-  '123': 'Khoa Khoa Học Công Nghệ Tiên Tiến',
-};
-
-type RegisterType = 'student' | 'free';
 
 interface StudentAuthProps {
   /** Gọi khi đăng nhập/đăng ký thành công */
@@ -32,24 +16,16 @@ interface StudentAuthProps {
 }
 
 export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
+  const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [registerType, setRegisterType] = useState<RegisterType>('student');
   const [open, setOpen] = useState(true);
-  const [studentId, setStudentId] = useState('');
-  const [username, setUsername] = useState('');
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [className, setClassName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const normalizedStudentId = studentId.trim();
-  const studentFaculty = STUDENT_FACULTY_BY_PREFIX[normalizedStudentId.slice(0, 3)];
-  const isStudentRegister = mode === 'register' && registerType === 'student';
-
-  /** Đóng modal — ưu tiên onClose từ cha, nếu không có thì tự đóng nội bộ. */
   const handleClose = () => {
     if (onClose) {
       onClose();
@@ -58,121 +34,81 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
     }
   };
 
-  const resetForm = () => {
-    setStudentId('');
-    setUsername('');
-    setPassword('');
-    setConfirmPassword('');
-    setFullName('');
-    setClassName('');
-    setError('');
-  };
-
-  const switchMode = (m: 'login' | 'register') => {
-    setMode(m);
-    setRegisterType('student');
-    resetForm();
-  };
-
-  const handleStudentIdChange = (value: string) => {
-    setStudentId(value.replace(/\D/g, ''));
-  };
-
-  const getRegisterTitle = () => (registerType === 'student' ? 'Đăng Ký Sinh Viên DUT' : 'Đăng Ký Tài Khoản Tự Do');
-
-  const getSubmitLabel = () => {
-    if (loading) return '⏳ Đang xử lý...';
-    if (mode === 'login') return '🚀 Đăng Nhập';
-    return registerType === 'student' ? '✅ Đăng Ký Sinh Viên' : '✅ Đăng Ký Tự Do';
-  };
-
-  const getPasswordHint = () => (mode === 'register' ? 'Tối thiểu 6 ký tự' : 'Nhập mật khẩu');
-
-  // Nếu đã đóng nội bộ (không có onClose) thì không render gì
   if (!open) return null;
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError('');
+    setSuccessMsg('');
 
-    if (mode === 'register') {
-      if (!fullName.trim()) {
-        setError('Vui lòng nhập họ và tên');
-        return;
-      }
-      if (!password.trim()) {
-        setError('Vui lòng nhập mật khẩu');
-        return;
-      }
-      if (password.length < 6) {
-        setError('Mật khẩu phải có ít nhất 6 ký tự');
-        return;
-      }
-      if (password !== confirmPassword) {
-        setError('Mật khẩu xác nhận không khớp');
-        return;
-      }
-    }
-
-    if (mode === 'login' && (!normalizedStudentId || !password)) {
-      setError('Vui lòng nhập mã số sinh viên và mật khẩu');
+    const cleanId = loginId.trim();
+    if (!cleanId || !password) {
+      setError('Vui lòng nhập Email hoặc Mã sinh viên và mật khẩu');
       return;
     }
 
     setLoading(true);
     try {
-      let result;
-      if (mode === 'login') {
-        result = await authAPI.studentLogin(normalizedStudentId, password);
-      } else if (isStudentRegister) {
-        if (!normalizedStudentId) {
-          setError('Vui lòng nhập mã số sinh viên');
-          return;
-        }
-        if (!/^\d+$/.test(normalizedStudentId)) {
-          setError('Mã số sinh viên phải là số');
-          return;
-        }
-        if (normalizedStudentId.length < 3) {
-          setError('Mã số sinh viên phải có ít nhất 3 số đầu để xác định khoa');
-          return;
-        }
+      // 1. Thử đăng nhập qua API Sinh viên / Participant
+      let result = await participantAPI.login(cleanId, password);
 
-        const facultyCode = normalizedStudentId.slice(0, 3);
-        const faculty = STUDENT_FACULTY_BY_PREFIX[facultyCode];
-        if (!faculty) {
-          setError('3 số đầu của MSSV không hợp lệ, vui lòng kiểm tra lại');
-          return;
+      // 2. Nếu thất bại, thử login qua authAPI (Admin/CTV fallback)
+      if (!result.success) {
+        const adminRes = await authAPI.login(cleanId, password);
+        if (adminRes.success) {
+          result = adminRes as any;
         }
-        if (!className.trim()) {
-          setError('Vui lòng nhập lớp');
-          return;
-        }
-
-        result = await authAPI.studentRegister({
-          student_id: normalizedStudentId,
-          password,
-          full_name: fullName.trim(),
-          faculty,
-          class_name: className.trim(),
-        });
-      } else {
-        if (!username.trim()) {
-          setError('Vui lòng nhập tên đăng nhập');
-          return;
-        }
-
-        result = await authAPI.freeRegister({
-          username: username.trim(),
-          password,
-          full_name: fullName.trim(),
-        });
       }
 
       if (result.success) {
-        onSuccess?.(result.user as SafeUser);
+        const user = (result.data || (result as any).user || (result as any).participant) as SafeUser;
+        const role = user?.role?.toLowerCase();
+        const isAdminOrCtv = role === 'admin' || role === 'ctv';
+
+        if (typeof window !== 'undefined') {
+          if (result.token) {
+            if (isAdminOrCtv) {
+              sessionStorage.setItem('auth_token', result.token);
+              localStorage.removeItem('auth_token');
+            } else {
+              localStorage.setItem('auth_token', result.token);
+              sessionStorage.removeItem('auth_token');
+            }
+          }
+          if (user) {
+            if (isAdminOrCtv) {
+              sessionStorage.setItem('admin_user', JSON.stringify(user));
+              sessionStorage.setItem('student_user', JSON.stringify(user));
+              localStorage.removeItem('admin_user');
+              localStorage.removeItem('student_user');
+            } else {
+              localStorage.setItem('student_user', JSON.stringify(user));
+              sessionStorage.removeItem('admin_user');
+            }
+          }
+        }
+
+        // 1. Nếu là Admin hoặc CTV -> Điều hướng ngay vào Dashboard Quản trị (/admin)
+        if (isAdminOrCtv) {
+          window.location.href = '/admin';
+          return;
+        }
+
+        // 2. Logic Router / Guard theo 3 trạng thái cho Sinh viên:
+        if (user?.status === 'pending') {
+          window.location.href = '/pending-approval';
+          return;
+        }
+
+        if (user?.status === 'rejected') {
+          window.location.href = '/rejected-info';
+          return;
+        }
+
+        // Với tài khoản sinh viên đã được duyệt (approved): điều hướng về trang chủ chính
+        window.location.href = '/';
       } else {
-        setError(result.message || 'Có lỗi xảy ra');
+        setError(result.message || 'Thông tin đăng nhập hoặc mật khẩu không chính xác');
       }
     } catch (err) {
       setError('Lỗi kết nối: ' + (err as Error).message);
@@ -181,13 +117,30 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
     }
   };
 
+  const handleRegisterSuccess = (registeredUser: SafeUser, registeredIdentifier?: string) => {
+    // Đăng ký xong: chuyển về tab Đăng Nhập, điền sẵn tài khoản & hiển thị thông báo thành công
+    setMode('login');
+    if (registeredIdentifier) {
+      setLoginId(registeredIdentifier);
+    } else if (registeredUser.student_id || registeredUser.email || registeredUser.username) {
+      setLoginId(registeredUser.student_id || registeredUser.email || registeredUser.username || '');
+    }
+    setPassword('');
+    setError('');
+    setSuccessMsg('🎉 Đăng ký tài khoản thành công! Vui lòng nhập mật khẩu để đăng nhập.');
+  };
+
   return (
     <div className="sa-overlay" onClick={handleClose}>
-      <div className="sa-card" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="sa-card"
+        style={mode === 'register' ? { maxWidth: '740px' } : { maxWidth: '440px' }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="sa-header">
-          <div className="sa-logo">🎓</div>
-          <h2>{mode === 'login' ? 'Đăng Nhập Sinh Viên' : getRegisterTitle()}</h2>
-          <p>CLB Thể thao điện tử DUT ESPORTS</p>
+          <div className="sa-logo">🏆</div>
+          <h2>{mode === 'login' ? 'Đăng Nhập Sinh Viên' : 'Đăng Ký Tài Khoản Sinh Viên'}</h2>
+          <p>Giải Đấu Thể Thao Điện Tử Sinh Viên Đà Nẵng</p>
           <button className="sa-close" onClick={handleClose} aria-label="Đóng" type="button">
             ✕
           </button>
@@ -196,194 +149,126 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
         <div className="sa-tabs">
           <button
             className={`sa-tab ${mode === 'login' ? 'active' : ''}`}
-            onClick={() => switchMode('login')}
+            onClick={() => {
+              setMode('login');
+              setError('');
+            }}
             type="button"
           >
             🔑 Đăng Nhập
           </button>
           <button
             className={`sa-tab ${mode === 'register' ? 'active' : ''}`}
-            onClick={() => switchMode('register')}
+            onClick={() => {
+              setMode('register');
+              setError('');
+              setSuccessMsg('');
+            }}
             type="button"
           >
             📝 Đăng Ký
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="sa-form">
-          {mode === 'login' ? (
+        {mode === 'login' ? (
+          <form onSubmit={handleLoginSubmit} className="sa-form">
+            {successMsg && <div className="sa-success">{successMsg}</div>}
+
             <div className="sa-field">
-              <label>🎓 Mã Số Sinh Viên *</label>
+              {/* 2. FORM ĐĂNG NHẬP: Label 'Nhập Email hoặc Mã sinh viên' */}
+              <label>👤 Nhập Email hoặc Mã sinh viên *</label>
               <input
                 type="text"
-                value={studentId}
-                onChange={(e) => handleStudentIdChange(e.target.value)}
-                placeholder="VD: 2210123456"
+                value={loginId}
+                onChange={(e) => {
+                  setLoginId(e.target.value);
+                  setError('');
+                }}
+                placeholder="VD: 102230123 hoặc sinhvien@dut.udn.vn"
                 required
                 disabled={loading}
-                inputMode="numeric"
-                pattern="[0-9]*"
+                autoCapitalize="none"
+                autoComplete="username"
               />
-              <small>Chỉ nhập số. Đây cũng là tên đăng nhập của sinh viên.</small>
+              <small>Hệ thống tự động nhận diện Email sinh viên hoặc Mã số sinh viên (MSSV).</small>
             </div>
-          ) : (
-            <>
-              <div className="sa-register-types">
-                <button
-                  type="button"
-                  className={`sa-type ${registerType === 'student' ? 'active' : ''}`}
-                  onClick={() => setRegisterType('student')}
-                  disabled={loading}
-                >
-                  Sinh viên DUT
-                </button>
-                <button
-                  type="button"
-                  className={`sa-type ${registerType === 'free' ? 'active' : ''}`}
-                  onClick={() => setRegisterType('free')}
-                  disabled={loading}
-                >
-                  Tự do
-                </button>
-              </div>
 
-              {isStudentRegister ? (
-                <div className="sa-field">
-                  <label>🎓 MSSV *</label>
-                  <input
-                    type="text"
-                    value={studentId}
-                    onChange={(e) => handleStudentIdChange(e.target.value)}
-                    placeholder="VD: 2210123456"
-                    required
-                    disabled={loading}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                  <small>MSSV phải là số và 3 số đầu dùng để xác định khoa.</small>
-                </div>
-              ) : (
-                <div className="sa-field">
-                  <label>👤 Tên đăng nhập *</label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="VD: nguyenvana"
-                    required
-                    disabled={loading}
-                    autoCapitalize="none"
-                    autoComplete="username"
-                  />
-                  <small>Dùng tên đăng nhập này cho luồng tự do.</small>
-                </div>
-              )}
-
-              <div className="sa-field">
-                <label>👤 Họ và Tên *</label>
+            <div className="sa-field">
+              <label>🔐 Mật Khẩu *</label>
+              <div className="sa-password-wrap">
                 <input
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="VD: Nguyễn Văn A"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError('');
+                  }}
+                  placeholder="Nhập mật khẩu của bạn"
                   required
                   disabled={loading}
+                  autoComplete="current-password"
                 />
+                <button
+                  type="button"
+                  className="sa-eye"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Hiện/ẩn mật khẩu"
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
               </div>
+            </div>
 
-              {isStudentRegister ? (
-                <div className="sa-row">
-                  <div className="sa-field">
-                    <label>🏫 Khoa</label>
-                    <input
-                      type="text"
-                      value={studentFaculty || ''}
-                      readOnly
-                      disabled={loading}
-                      placeholder="Tự động xác định theo MSSV"
-                    />
-                    <small>
-                      {studentFaculty ? `Khớp theo 3 số đầu: ${normalizedStudentId.slice(0, 3)}` : 'Nhập đủ MSSV hợp lệ để hệ thống tự xác định khoa.'}
-                    </small>
-                  </div>
-                  <div className="sa-field">
-                    <label>📚 Lớp *</label>
-                    <input
-                      type="text"
-                      value={className}
-                      onChange={(e) => setClassName(e.target.value)}
-                      placeholder="VD: 22T1"
-                      required
-                      disabled={loading}
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="sa-field">
-                  <label>🪪 Luồng tự do</label>
-                  <input type="text" value="Chỉ cần tên đăng nhập, họ tên và mật khẩu" readOnly disabled={loading} />
-                  <small>Không cần MSSV và không cần chọn khoa.</small>
-                </div>
-              )}
-            </>
-          )}
+            {error && <div className="sa-error">⚠️ {error}</div>}
 
-          <div className="sa-field">
-            <label>🔐 Mật Khẩu *</label>
-            <div className="sa-password-wrap">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder={getPasswordHint()}
-                required
-                disabled={loading}
-                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              />
-              <button
-                type="button"
-                className="sa-eye"
-                onClick={() => setShowPassword(!showPassword)}
-                aria-label="Hiện/ẩn mật khẩu"
-              >
-                {showPassword ? '🙈' : '👁️'}
-              </button>
+            <button type="submit" className="sa-submit" disabled={loading}>
+              {loading ? '⏳ Đang xác thực...' : '🚀 Đăng Nhập'}
+            </button>
+
+            <div className="sa-footer">
+              <p>
+                Chưa có tài khoản sinh viên?{' '}
+                <button
+                  className="sa-link"
+                  onClick={() => {
+                    setMode('register');
+                    setError('');
+                    setSuccessMsg('');
+                  }}
+                  type="button"
+                >
+                  Đăng ký ngay
+                </button>
+              </p>
+            </div>
+          </form>
+        ) : (
+          <div style={{ marginTop: '6px' }}>
+            <StudentRegistrationForm
+              onSuccess={handleRegisterSuccess}
+              onCancel={() => {
+                setMode('login');
+                setError('');
+                setSuccessMsg('');
+              }}
+            />
+            <div className="sa-footer" style={{ marginTop: '16px' }}>
+              <p>
+                Đã có tài khoản?{' '}
+                <button
+                  className="sa-link"
+                  onClick={() => {
+                    setMode('login');
+                    setError('');
+                  }}
+                  type="button"
+                >
+                  Quay lại Đăng nhập
+                </button>
+              </p>
             </div>
           </div>
-
-          {mode === 'register' && (
-            <div className="sa-field">
-              <label>🔐 Xác Nhận Mật Khẩu *</label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Nhập lại mật khẩu"
-                required
-                disabled={loading}
-              />
-            </div>
-          )}
-
-          {error && <div className="sa-error">⚠️ {error}</div>}
-
-          <button type="submit" className="sa-submit" disabled={loading}>
-            {getSubmitLabel()}
-          </button>
-        </form>
-
-        <div className="sa-footer">
-          <p>
-            {mode === 'login' ? 'Chưa có tài khoản? ' : 'Đã có tài khoản? '}
-            <button
-              className="sa-link"
-              onClick={() => switchMode(mode === 'login' ? 'register' : 'login')}
-              type="button"
-            >
-              {mode === 'login' ? 'Đăng ký ngay' : 'Đăng nhập'}
-            </button>
-          </p>
-        </div>
+        )}
       </div>
     </div>
   );

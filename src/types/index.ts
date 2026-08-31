@@ -1,9 +1,14 @@
 /**
  * Domain types dùng chung toàn bộ frontend.
- * Phản ánh đúng cấu trúc dữ liệu trả về từ backend.
+ * Phản ánh đúng cấu trúc dữ liệu trả về từ backend và database schema chuẩn hóa (18 bảng).
+ * Zero CCCD Invariant: Tuyệt đối không dùng thông tin hay hình ảnh CCCD/CMND.
  */
 
 export type UserRole = 'admin' | 'ctv' | 'user';
+
+export type ParticipantAccountType = 'internal' | 'external' | 'dut_student' | 'dut' | 'free';
+
+export type ParticipantStatus = 'pending' | 'approved' | 'rejected';
 
 export type TournamentStatus = 'pending' | 'approved' | 'rejected' | 'active' | 'completed';
 
@@ -17,15 +22,36 @@ export interface SafeUser {
   username?: string | null;
   full_name: string;
   student_id: string | null;
-  phone: string | null;
-  faculty: string | null;
+  phone?: string | null;
+  phone_number?: string | null;
+  university_name?: string | null;
+  faculty?: string | null;
+  faculty_name?: string | null;
   class_name: string | null;
-  course: string | null;
-  role: UserRole;
-  is_active: boolean;
+  course?: string | null;
+  role?: UserRole;
+  account_type?: ParticipantAccountType;
+  
+  // KYC 2 ảnh Thẻ Sinh Viên
+  student_card_url?: string | null;
+  selfie_with_student_card_url?: string | null;
+  
+  // Trạng thái phê duyệt
+  status?: ParticipantStatus;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  rejection_reason?: string | null;
+  rejected_at?: string | null;
+  
+  is_active?: boolean;
+  is_banned?: boolean;
+  ban_reason?: string | null;
+  banned_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
+
+export type Participant = SafeUser;
 
 export interface FormField {
   id: string;
@@ -68,17 +94,35 @@ export interface Tournament {
   created_by_name?: string;
 }
 
+export interface RegistrationMemberDetail {
+  participant_id: string;
+  full_name: string;
+  username: string;
+  class_name: string | null;
+  faculty_name: string | null;
+  account_type: 'dut' | 'free' | 'internal' | 'external';
+  is_captain: boolean;
+}
+
 export interface Registration {
   id: string;
   tournament_id: string;
+  captain_id?: string;
+  team_name?: string | null;
   submitted_data: Record<string, unknown> | string;
   status: RegistrationStatus;
   registered_at: string;
   updated_at: string;
   tournament_name?: string;
   game_name?: string;
+  participation_type?: ParticipationType;
   form_schema?: FormSchema;
   tournament_owner?: string;
+  captain_name?: string;
+  captain_username?: string;
+  captain_class_name?: string;
+  captain_faculty_name?: string;
+  members?: RegistrationMemberDetail[];
 }
 
 export interface AdminStats {
@@ -98,13 +142,15 @@ export interface Pagination {
 
 /**
  * Hình dạng phản hồi chuẩn của API.
- * Các field là optional vì mỗi endpoint trả cấu trúc khác nhau.
  */
 export interface ApiResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
   token?: string;
+  redirectTo?: string;
+  status?: ParticipantStatus;
+  participant?: SafeUser;
   user?: SafeUser;
   tournament?: Partial<Tournament>;
   pagination?: Pagination;

@@ -1,22 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authAPI, getAuthToken, removeAuthToken } from '../../services/auth.service';
+import { authAPI, extractUserFromResponse, getAuthToken, removeAuthToken } from '../../services/auth.service';
 import type { SafeUser } from '../../types';
 import '../../styles/admin/AdminDashboard.css';
 import AdminLogin from './AdminLogin';
 import AdminOverview from './AdminOverview';
 import CTVDashboard from './CTVDashboard';
+import CTVManager from './CTVManager';
+import ParticipantManager from './ParticipantManager';
 import TournamentManager from './TournamentManager';
-import UserManagement from './UserManagement';
 
 const menuItems = [
   { id: 'overview', label: 'Tổng Quan', icon: '📊' },
-  { id: 'users', label: 'Quản Lý Người Dùng', icon: '👤' },
+  { id: 'ctv', label: 'Quản Lý CTV', icon: '👥' },
+  { id: 'participants', label: 'Hồ Sơ Sinh Viên (KYC)', icon: '🪪' },
   { id: 'tournaments', label: 'Quản Lý Giải Đấu', icon: '🏆' },
 ];
 
-type SectionId = 'overview' | 'users' | 'tournaments';
+type SectionId = 'overview' | 'ctv' | 'participants' | 'tournaments';
 
 export default function AdminDashboard() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -28,21 +30,74 @@ export default function AdminDashboard() {
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
+      // Dọn dẹp bất kỳ thông tin admin cũ nào trong localStorage để đảm bảo bảo mật
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('admin_user');
+      }
+
       const token = getAuthToken();
       if (token) {
         try {
           const result = await authAPI.getCurrentUser();
-          if (result.success) {
-            setUser(result.data ?? null);
+          const userObj = extractUserFromResponse(result) ?? (result.data as SafeUser | null) ?? (result.user as SafeUser | null);
+          const role = userObj?.role?.toLowerCase();
+          if (result.success && userObj && (role === 'admin' || role === 'ctv')) {
+            setUser(userObj);
             setIsLoggedIn(true);
+            sessionStorage.setItem('admin_user', JSON.stringify(userObj));
           } else {
-            removeAuthToken();
-            setIsLoggedIn(false);
+            const cached = sessionStorage.getItem('admin_user');
+            if (cached) {
+              try {
+                const u = JSON.parse(cached);
+                if (u && (u.role === 'admin' || u.role === 'ctv')) {
+                  setUser(u);
+                  setIsLoggedIn(true);
+                } else {
+                  authAPI.logout();
+                  setIsLoggedIn(false);
+                }
+              } catch {
+                authAPI.logout();
+                setIsLoggedIn(false);
+              }
+            } else {
+              authAPI.logout();
+              setIsLoggedIn(false);
+            }
           }
         } catch (err) {
           console.error('Auth check failed:', err);
-          removeAuthToken();
-          setIsLoggedIn(false);
+          const cached = sessionStorage.getItem('admin_user');
+          if (cached) {
+            try {
+              const u = JSON.parse(cached);
+              if (u && (u.role === 'admin' || u.role === 'ctv')) {
+                setUser(u);
+                setIsLoggedIn(true);
+              } else {
+                authAPI.logout();
+                setIsLoggedIn(false);
+              }
+            } catch {
+              authAPI.logout();
+              setIsLoggedIn(false);
+            }
+          } else {
+            authAPI.logout();
+            setIsLoggedIn(false);
+          }
+        }
+      } else {
+        const cached = sessionStorage.getItem('admin_user');
+        if (cached) {
+          try {
+            const u = JSON.parse(cached);
+            if (u && (u.role === 'admin' || u.role === 'ctv')) {
+              setUser(u);
+              setIsLoggedIn(true);
+            }
+          } catch {}
         }
       }
       setLoading(false);
@@ -54,6 +109,10 @@ export default function AdminDashboard() {
   const handleLoginSuccess = (userData: SafeUser) => {
     setUser(userData);
     setIsLoggedIn(true);
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('admin_user', JSON.stringify(userData));
+      localStorage.removeItem('admin_user');
+    }
   };
 
   const handleLogout = () => {
@@ -61,6 +120,9 @@ export default function AdminDashboard() {
     setIsLoggedIn(false);
     setUser(null);
     setActiveSection('overview');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   if (loading) {
@@ -84,8 +146,10 @@ export default function AdminDashboard() {
     switch (activeSection) {
       case 'overview':
         return <AdminOverview />;
-      case 'users':
-        return <UserManagement />;
+      case 'ctv':
+        return <CTVManager />;
+      case 'participants':
+        return <ParticipantManager />;
       case 'tournaments':
         return <TournamentManager userRole={user?.role} />;
       default:

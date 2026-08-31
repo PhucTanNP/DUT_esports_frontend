@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { authAPI } from '../../services/auth.service';
+import { authAPI, extractUserFromResponse } from '../../services/auth.service';
 import type { SafeUser } from '../../types';
 import '../../styles/admin/AdminLogin.css';
 
@@ -26,7 +26,12 @@ export default function AdminLogin({ onLoginSuccess }: AdminLoginProps) {
       if (result.success) {
         setEmail('');
         setPassword('');
-        onLoginSuccess(result.user as SafeUser);
+        const userObj = extractUserFromResponse(result) ?? (result.user as SafeUser);
+        if (userObj) {
+          onLoginSuccess(userObj);
+        } else {
+          setError('Không thể lấy thông tin người dùng.');
+        }
       } else {
         setError(result.message || 'Đăng nhập thất bại');
       }

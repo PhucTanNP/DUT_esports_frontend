@@ -387,14 +387,31 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       return;
     }
     const tourName = regModalTournament?.name || 'GiaiDau';
+    const isTeam = regModalTournament?.participation_type === 'team';
     const schemaFields = selectedTournamentSchema;
+
     const rows: Record<string, unknown>[] = registrations.map((reg, idx) => {
       const submittedData = parseSubmittedData(reg.submitted_data);
+      const membersList = (reg.members || [])
+        .map(
+          (m) =>
+            `${m.is_captain ? '👑 Đội trưởng: ' : '• Thành viên: '}${m.full_name} (${m.username}${m.class_name ? ` - ${m.class_name}` : ''})`,
+        )
+        .join('\n');
+
       const row: Record<string, unknown> = {
         STT: idx + 1,
+        'Hình Thức': isTeam ? 'Đội' : 'Cá nhân',
+        ...(isTeam ? { 'Tên Đội': reg.team_name || 'Chưa đặt' } : {}),
+        'Đội Trưởng / Thí Sinh': reg.captain_name || '-',
+        'Mã SV / Username': reg.captain_username || '-',
+        Lớp: reg.captain_class_name || '-',
+        Khoa: reg.captain_faculty_name || '-',
+        ...(isTeam ? { 'Số Thành Viên': reg.members?.length || 0, 'Danh Sách Thành Viên': membersList } : {}),
         'Ngày Đăng Ký': reg.registered_at ? new Date(reg.registered_at).toLocaleString('vi-VN') : '-',
         'Trạng Thái': reg.status === 'approved' ? 'Đã duyệt' : reg.status === 'rejected' ? 'Từ chối' : 'Chờ duyệt',
       };
+
       if (schemaFields.length > 0) {
         schemaFields.forEach((f) => {
           row[f.label] = submittedData[f.id] ?? '';
@@ -407,7 +424,7 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       return row;
     });
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = Object.keys(rows[0] || {}).map((k) => ({ wch: Math.max(k.length, 15) }));
+    ws['!cols'] = Object.keys(rows[0] || {}).map((k) => ({ wch: Math.max(k.length, 18) }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Đăng Ký');
     const fileName = `DangKy_${tourName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.xlsx`;
@@ -488,8 +505,8 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                     <th>Mã</th>
                     <th>Tên Giải Đấu</th>
                     <th>Trò Chơi</th>
-                    <th>Loại</th>
-                    <th>Số Đội</th>
+                    <th>Loại Tham Gia</th>
+                    <th>Quy Mô Max</th>
                     <th>Ngày Bắt Đầu</th>
                     <th>Hành Động</th>
                   </tr>
@@ -501,11 +518,13 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                       <td className="name-cell">{t.name}</td>
                       <td>{t.game_name}</td>
                       <td>
-                        {t.participation_type === 'team'
-                          ? `👥 Đội (${t.min_team_size}-${t.max_team_size})`
-                          : '👤 Cá nhân'}
+                        {t.participation_type === 'team' ? (
+                          <span className="type-tag team">👥 Đội ({t.min_team_size || 1}-{t.max_team_size || 5} TV)</span>
+                        ) : (
+                          <span className="type-tag individual">👤 Cá nhân</span>
+                        )}
                       </td>
-                      <td>{t.max_participants}</td>
+                      <td>{t.max_participants} {t.participation_type === 'team' ? 'đội' : 'người'}</td>
                       <td>{t.start_at ? formatDateTime(t.start_at) : '-'}</td>
                       <td className="actions-cell">
                         <button onClick={() => void openRegModal(t)} className="btn-icon reg-list" title="Danh sách đăng ký">👥</button>
@@ -552,8 +571,8 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                       </span>
                     </div>
                     <div className="detail-item">
-                      <span className="label">Số Người:</span>
-                      <span>{t.max_participants}</span>
+                      <span className="label">Số Lượng Max:</span>
+                      <span>{t.max_participants} {t.participation_type === 'team' ? 'đội' : 'thí sinh'}</span>
                     </div>
                     <div className="detail-item">
                       <span className="label">Thời Gian:</span>
@@ -600,7 +619,12 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
           <div className="reg-slide-panel" onClick={(e) => e.stopPropagation()}>
             <div className="reg-panel-header">
               <div>
-                <h3>👥 Danh Sách Đăng Ký</h3>
+                <h3>
+                  👥 Danh Sách Đăng Ký 
+                  <span className="panel-type-badge">
+                    {regModalTournament.participation_type === 'team' ? ' 👥 Giải Đội' : ' 👤 Giải Cá Nhân'}
+                  </span>
+                </h3>
                 <p className="reg-panel-sub">{regModalTournament.name} • <code>{regModalTournament.code}</code></p>
               </div>
               <div className="reg-panel-actions">
@@ -649,32 +673,39 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                       <thead>
                         <tr>
                           <th>#</th>
-                          <th>Thời Gian Đăng Ký</th>
-                          {selectedTournamentSchema.length > 0
-                            ? selectedTournamentSchema.map((f) => <th key={f.id}>{f.label}</th>)
-                            : <th>Dữ Liệu</th>}
+                          <th>Thời Gian</th>
+                          <th>{regModalTournament.participation_type === 'team' ? 'Đội / Đội Trưởng' : 'Thí Sinh Tham Gia'}</th>
                           <th>Trạng Thái</th>
                           <th>Hành Động</th>
                         </tr>
                       </thead>
                       <tbody>
                         {registrations.map((reg, idx) => {
-                          const data = parseSubmittedData(reg.submitted_data);
+                          const isTeamReg = regModalTournament.participation_type === 'team' || Boolean(reg.team_name);
                           return (
                             <tr key={reg.id}>
                               <td>{idx + 1}</td>
                               <td className="reg-date">{formatDateTime(reg.registered_at)}</td>
-                              {selectedTournamentSchema.length > 0
-                                ? selectedTournamentSchema.map((f) => (
-                                    <td key={f.id} className="reg-data-cell">
-                                      {data[f.id] !== undefined ? String(data[f.id]) : <span className="text-muted">-</span>}
-                                    </td>
-                                  ))
-                                : (
-                                  <td className="reg-data-cell">
-                                    <button className="btn-view-data" onClick={() => setViewingReg(reg)}>👁️ Xem</button>
-                                  </td>
+                              <td className="reg-info-cell">
+                                {isTeamReg ? (
+                                  <div>
+                                    <div className="reg-team-title font-bold">🚩 {reg.team_name || 'Đội chưa đặt tên'}</div>
+                                    <div className="reg-sub-text">
+                                      👑 Đội trưởng: {reg.captain_name || 'N/A'} <code>({reg.captain_username || '-'})</code>
+                                    </div>
+                                    <div className="reg-member-badge">
+                                      👥 {reg.members?.length || 1} thành viên
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div className="reg-participant-title font-bold">👤 {reg.captain_name || 'Thí sinh'}</div>
+                                    <div className="reg-sub-text">
+                                      Mã SV: <code>{reg.captain_username || '-'}</code> {reg.captain_class_name ? `• ${reg.captain_class_name}` : ''}
+                                    </div>
+                                  </div>
                                 )}
+                              </td>
                               <td>
                                 <span className={`reg-status-badge reg-status-${reg.status}`}>
                                   {reg.status === 'approved' ? '✅ Duyệt'
@@ -683,6 +714,7 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                                 </span>
                               </td>
                               <td className="reg-actions">
+                                <button className="btn-reg-view" onClick={() => setViewingReg(reg)} title="Xem chi tiết & danh sách thành viên">👁️ Xem</button>
                                 {reg.status !== 'approved' && (
                                   <button className="btn-reg-approve" onClick={() => void handleUpdateRegStatus(reg.id, 'approved')} title="Duyệt">✅</button>
                                 )}
@@ -709,11 +741,14 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
         <div className="modal-overlay" onClick={() => setViewingReg(null)}>
           <div className="modal modal-reg-detail" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>📋 Chi Tiết Đăng Ký</h3>
+              <h3>📋 Chi Tiết Đăng Ký &amp; Danh Sách Thành Viên</h3>
               <button onClick={() => setViewingReg(null)} className="btn-close">✕</button>
             </div>
             <div className="reg-detail-content">
               <div className="reg-detail-meta">
+                <span className="type-badge-pill">
+                  {viewingReg.participation_type === 'team' || viewingReg.team_name ? '👥 Đăng Ký Đội' : '👤 Đăng Ký Cá Nhân'}
+                </span>
                 <span>⏰ {formatDateTime(viewingReg.registered_at)}</span>
                 <span className={`reg-status-badge reg-status-${viewingReg.status}`}>
                   {viewingReg.status === 'approved' ? '✅ Đã duyệt'
@@ -721,17 +756,99 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                     : '⏳ Chờ duyệt'}
                 </span>
               </div>
-              <div className="reg-detail-fields">
-                {Object.entries(parseSubmittedData(viewingReg.submitted_data)).map(([k, v]) => {
-                  const schemaField = selectedTournamentSchema.find((f) => f.id === k);
-                  return (
-                    <div key={k} className="reg-detail-field">
-                      <span className="reg-detail-label">{schemaField?.label || k}</span>
-                      <span className="reg-detail-value">{String(v)}</span>
-                    </div>
-                  );
-                })}
+
+              {/* Summary Card */}
+              <div className="reg-detail-summary-card">
+                {viewingReg.team_name && (
+                  <div className="summary-row">
+                    <span className="summary-label">🚩 Tên Đội:</span>
+                    <span className="summary-val team-title">{viewingReg.team_name}</span>
+                  </div>
+                )}
+                <div className="summary-row">
+                  <span className="summary-label">👑 {viewingReg.team_name ? 'Đội Trưởng:' : 'Thí Sinh:'}</span>
+                  <span className="summary-val font-bold">
+                    {viewingReg.captain_name || viewingReg.captain_id} 
+                    {viewingReg.captain_username && <code className="sub-code"> ({viewingReg.captain_username})</code>}
+                  </span>
+                </div>
+                {(viewingReg.captain_class_name || viewingReg.captain_faculty_name) && (
+                  <div className="summary-row">
+                    <span className="summary-label">🎓 Lớp / Khoa:</span>
+                    <span className="summary-val">
+                      {viewingReg.captain_class_name || '-'} • {viewingReg.captain_faculty_name || '-'}
+                    </span>
+                  </div>
+                )}
               </div>
+
+              {/* Members Table */}
+              {viewingReg.members && viewingReg.members.length > 0 && (
+                <div className="reg-detail-members-section">
+                  <h4 className="section-subtitle">
+                    👥 Danh Sách Thành Viên ({viewingReg.members.length} người)
+                  </h4>
+                  <div className="members-table-wrapper">
+                    <table className="members-table">
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Vai Trò</th>
+                          <th>Họ và Tên</th>
+                          <th>Mã SV / Username</th>
+                          <th>Lớp</th>
+                          <th>Khoa</th>
+                          <th>Loại TK</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {viewingReg.members.map((m, idx) => (
+                          <tr key={m.participant_id || idx} className={m.is_captain ? 'captain-row' : ''}>
+                            <td>{idx + 1}</td>
+                            <td>
+                              {m.is_captain ? (
+                                <span className="role-badge captain">👑 Đội trưởng</span>
+                              ) : (
+                                <span className="role-badge member">👤 Thành viên</span>
+                              )}
+                            </td>
+                            <td className="font-bold">{m.full_name}</td>
+                            <td><code>{m.username}</code></td>
+                            <td>{m.class_name || '-'}</td>
+                            <td>{m.faculty_name || '-'}</td>
+                            <td>
+                              <span className={`acc-type-tag ${m.account_type}`}>
+                                {m.account_type === 'dut' ? '🏫 DUT' : '🌐 Tự do'}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Submitted Form Data */}
+              <div className="reg-detail-fields-section">
+                <h4 className="section-subtitle">📝 Thông Tin Form Đăng Ký</h4>
+                <div className="reg-detail-fields">
+                  {Object.keys(parseSubmittedData(viewingReg.submitted_data)).length === 0 ? (
+                    <p className="text-muted">Không có dữ liệu form bổ sung</p>
+                  ) : (
+                    Object.entries(parseSubmittedData(viewingReg.submitted_data)).map(([k, v]) => {
+                      const schemaField = selectedTournamentSchema.find((f) => f.id === k);
+                      return (
+                        <div key={k} className="reg-detail-field">
+                          <span className="reg-detail-label">{schemaField?.label || k}</span>
+                          <span className="reg-detail-value">{String(v)}</span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
               <div className="modal-actions">
                 {viewingReg.status !== 'approved' && (
                   <button className="btn-approve" onClick={() => { void handleUpdateRegStatus(viewingReg.id, 'approved'); setViewingReg(null); }}>✅ Duyệt</button>
@@ -800,14 +917,22 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                   <label>Loại Tham Gia *</label>
                   <select
                     value={form.participation_type}
-                    onChange={(e) => setForm({ ...form, participation_type: e.target.value as 'individual' | 'team' })}
+                    onChange={(e) => {
+                      const type = e.target.value as 'individual' | 'team';
+                      setForm({
+                        ...form,
+                        participation_type: type,
+                        min_team_size: type === 'team' ? (form.min_team_size || 3) : '',
+                        max_team_size: type === 'team' ? (form.max_team_size || 5) : '',
+                      });
+                    }}
                   >
                     <option value="individual">👤 Cá nhân</option>
                     <option value="team">👥 Đội</option>
                   </select>
                 </div>
                 <div className="form-group">
-                  <label>Số Đội Tối Đa *</label>
+                  <label>{form.participation_type === 'team' ? 'Số Đội Tối Đa *' : 'Số Thí Sinh Tối Đa *'}</label>
                   <input
                     type="number"
                     value={form.max_participants}

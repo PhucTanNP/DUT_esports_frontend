@@ -6,14 +6,38 @@ export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://loca
 // ===========================
 // TOKEN MANAGEMENT
 // ===========================
-export const getAuthToken = (): string | null => localStorage.getItem('auth_token');
-export const setAuthToken = (token: string): void => localStorage.setItem('auth_token', token);
-export const removeAuthToken = (): void => localStorage.removeItem('auth_token');
+export const getAuthToken = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+};
 
-export const getAuthHeader = (): Record<string, string> => ({
-  Authorization: `Bearer ${getAuthToken()}`,
-  'Content-Type': 'application/json',
-});
+export const setAuthToken = (token: string, sessionOnly: boolean = false): void => {
+  if (typeof window === 'undefined') return;
+  if (sessionOnly) {
+    sessionStorage.setItem('auth_token', token);
+    localStorage.removeItem('auth_token');
+  } else {
+    localStorage.setItem('auth_token', token);
+    sessionStorage.removeItem('auth_token');
+  }
+};
+
+export const removeAuthToken = (): void => {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('auth_token');
+  sessionStorage.removeItem('auth_token');
+};
+
+export const getAuthHeader = (): Record<string, string> => {
+  const token = getAuthToken();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (token && token !== 'null' && token !== 'undefined') {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  return headers;
+};
 
 /**
  * Request wrapper — tự gắn API_BASE, tự set Content-Type JSON,
@@ -31,5 +55,12 @@ export async function apiRequest<T = unknown>(
   }
 
   const response = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  return (await response.json()) as ApiResponse<T>;
+  const json = await response.json().catch(() => ({}));
+  const isOk = response.ok;
+  
+  return {
+    success: typeof json.success === 'boolean' ? json.success : isOk,
+    ...json,
+    status: response.status,
+  } as ApiResponse<T> & { status?: number };
 }

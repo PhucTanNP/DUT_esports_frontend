@@ -87,8 +87,8 @@ export default function UserManagement() {
       full_name: user.full_name,
       email: user.email ?? '',
       password: '',
-      role: user.role,
-      is_active: user.is_active,
+      role: user.role ?? 'user',
+      is_active: user.is_active ?? true,
     });
     setEditingUser(user.id);
     setShowModal(true);
@@ -270,9 +270,9 @@ export default function UserManagement() {
                       <td>
                         <span
                           className="role-badge"
-                          style={{ backgroundColor: getRoleColor(user.role) + '20', color: getRoleColor(user.role) }}
+                          style={{ backgroundColor: getRoleColor(user.role ?? 'user') + '20', color: getRoleColor(user.role ?? 'user') }}
                         >
-                          {getRoleLabel(user.role)}
+                          {getRoleLabel(user.role ?? 'user')}
                         </span>
                       </td>
                       <td>{formatDate(user.created_at)}</td>
