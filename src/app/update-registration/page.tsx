@@ -122,6 +122,7 @@ export default function UpdateRegistrationPage() {
     try {
       setSubmitting(true);
       const payload = {
+        identifier: user?.id || user?.student_id || user?.username || user?.email || studentId.trim(),
         full_name: fullName.trim(),
         phone_number: phoneNumber.trim() || undefined,
         university_name: universityName.trim() || undefined,
