@@ -127,14 +127,16 @@ export default function StudentRegistrationForm({ onSuccess, onCancel }: Student
 
       const result = await participantAPI.register(payload);
 
-      if (result.success && result.data) {
-        // Đăng xuất và xóa mọi session cũ để đảm bảo người dùng phải đăng nhập
-        authAPI.logout();
-        setSuccess('Đăng ký tài khoản thành công! Vui lòng đăng nhập để tiếp tục.');
-        const registeredIdentifier = studentId.trim() || email.trim();
+      if (result.success && (result.data || (result as any).participant)) {
+        const user = (result.data || (result as any).participant) as SafeUser;
+        if (result.token && typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', result.token);
+          localStorage.setItem('student_user', JSON.stringify(user));
+        }
+        setSuccess('Đăng ký tài khoản thành công! Đang chuyển hướng đến trang Chờ duyệt...');
         setTimeout(() => {
-          onSuccess?.(result.data as SafeUser, registeredIdentifier);
-        }, 1200);
+          window.location.href = '/pending-approval';
+        }, 1000);
       } else {
         setError(result.message || 'Đăng ký không thành công. Vui lòng kiểm tra lại thông tin.');
       }

@@ -1,176 +1,110 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
-import { getDutFaculties, DUT_FACULTIES, authAPI } from '../services/auth.service';
-import { participantAPI, type ParticipantRow } from '../services/participant.service';
+import React, { useState, useRef } from 'react';
+import { participantAPI, UNIVERSITIES, type RegisterParticipantPayload } from '../services/participant.service';
+import { DUT_FACULTIES } from '../services/auth.service';
 import type { SafeUser } from '../types';
 import '../styles/ParticipantRegisterForm.css';
 
 interface ParticipantRegisterFormProps {
-  onSuccess?: (user: SafeUser, registeredIdentifier?: string) => void;
+  onSuccess?: (user: SafeUser, identifier?: string) => void;
   onCancel?: () => void;
 }
 
 export default function ParticipantRegisterForm({ onSuccess, onCancel }: ParticipantRegisterFormProps) {
-  const [accountType, setAccountType] = useState<'dut_student' | 'external'>('dut_student');
+  const [accountType, setAccountType] = useState<'internal' | 'external' | 'dut_student'>('dut_student');
+
+  // Thông tin cơ bản
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [cccdNumber, setCccdNumber] = useState('');
-  const [cccdFrontUrl, setCccdFrontUrl] = useState('');
-  const [cccdBackUrl, setCccdBackUrl] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Sinh viên DUT fields
+  // Sinh viên DUT
   const [studentId, setStudentId] = useState('');
-  const [facultyName, setFacultyName] = useState('');
+  const [universityName, setUniversityName] = useState<string>(UNIVERSITIES[0]);
+  const [facultyName, setFacultyName] = useState<string>(DUT_FACULTIES[0]);
   const [className, setClassName] = useState('');
+
+  // 2 Ảnh thẻ sinh viên KYC (Zero CCCD Invariant)
   const [studentCardUrl, setStudentCardUrl] = useState('');
   const [selfieWithStudentCardUrl, setSelfieWithStudentCardUrl] = useState('');
 
-  // External fields
-  const [username, setUsername] = useState('');
-
-  // State quản lý UI
-  const [faculties, setFaculties] = useState<string[]>([...DUT_FACULTIES]);
+  // UI States
+  const [loading, setLoading] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  // Hidden File input refs
-  const cccdFrontRef = useRef<HTMLInputElement>(null);
-  const cccdBackRef = useRef<HTMLInputElement>(null);
   const studentCardRef = useRef<HTMLInputElement>(null);
-  const selfieCardRef = useRef<HTMLInputElement>(null);
+  const selfieRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    getDutFaculties().then(setFaculties);
-  }, []);
-
-  const handleFileUpload = async (file: File, fieldName: string) => {
+  // Tải ảnh tài liệu
+  const handleFileUpload = async (file: File, fieldName: 'student_card' | 'selfie') => {
     try {
       setUploadingField(fieldName);
       setError(null);
       const res = await participantAPI.uploadDocument(file);
       if (res.success && res.url) {
-        if (fieldName === 'cccd_front') setCccdFrontUrl(res.url);
-        if (fieldName === 'cccd_back') setCccdBackUrl(res.url);
         if (fieldName === 'student_card') setStudentCardUrl(res.url);
-        if (fieldName === 'selfie_card') setSelfieWithStudentCardUrl(res.url);
+        if (fieldName === 'selfie') setSelfieWithStudentCardUrl(res.url);
       } else {
         setError(res.message || 'Tải ảnh lên thất bại');
       }
     } catch (err) {
-      setError('Lỗi khi tải ảnh: ' + (err as Error).message);
+      setError('Lỗi tải ảnh: ' + (err as Error).message);
     } finally {
       setUploadingField(null);
     }
   };
 
-  const validateForm = (): boolean => {
-    setError(null);
-
-    if (!fullName.trim()) {
-      setError('Vui lòng nhập Họ và Tên');
-      return false;
-    }
-    if (!email.trim() || !/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError('Vui lòng nhập địa chỉ Email hợp lệ');
-      return false;
-    }
-    if (!password || password.length < 6) {
-      setError('Mật khẩu phải có ít nhất 6 ký tự');
-      return false;
-    }
-    if (password !== confirmPassword) {
-      setError('Mật khẩu xác nhận không khớp');
-      return false;
-    }
-    if (!cccdNumber.trim() || !/^\d{9,12}$/.test(cccdNumber.trim())) {
-      setError('Số CCCD/CMND phải là dãy 9 đến 12 chữ số');
-      return false;
-    }
-    if (!cccdFrontUrl) {
-      setError('Vui lòng tải lên ảnh Mặt Trước CCCD');
-      return false;
-    }
-    if (!cccdBackUrl) {
-      setError('Vui lòng tải lên ảnh Mặt Sau CCCD');
-      return false;
-    }
-
-    if (accountType === 'dut_student') {
-      const cleanSid = studentId.trim();
-      if (!cleanSid || !/^\d{8,15}$/.test(cleanSid)) {
-        setError('Mã số sinh viên (MSSV) không hợp lệ (phải là 8-15 chữ số)');
-        return false;
-      }
-      if (!facultyName) {
-        setError('Vui lòng chọn Khoa sinh viên đang học');
-        return false;
-      }
-      if (!className.trim()) {
-        setError('Vui lòng nhập Lớp sinh viên');
-        return false;
-      }
-      if (!studentCardUrl) {
-        setError('Vui lòng tải lên ảnh Thẻ Sinh Viên');
-        return false;
-      }
-      if (!selfieWithStudentCardUrl) {
-        setError('Vui lòng tải lên ảnh Chụp Selfie Cầm Thẻ Sinh Viên');
-        return false;
-      }
-    } else {
-      const cleanUser = username.trim().toLowerCase();
-      if (!cleanUser || !/^[a-z0-9._-]{3,32}$/.test(cleanUser)) {
-        setError('Tên đăng nhập (Username) không hợp lệ (3-32 ký tự, chỉ gồm chữ, số, _, -, .)');
-        return false;
-      }
-    }
-
-    return true;
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
+    setError(null);
+    setSuccess(null);
+
+    // Validate
+    if (!fullName.trim()) return setError('Vui lòng nhập Họ và Tên');
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setError('Email không hợp lệ');
+    if (!phoneNumber.trim() || phoneNumber.trim().length < 8) return setError('Số điện thoại không hợp lệ');
+    if (!password || password.length < 6) return setError('Mật khẩu tối thiểu 6 ký tự');
+    if (password !== confirmPassword) return setError('Mật khẩu xác nhận không khớp');
+
+    if (!studentId.trim()) return setError('Mã số sinh viên (MSSV) là bắt buộc');
+    if (!className.trim()) return setError('Vui lòng nhập Lớp sinh hoạt');
+    if (!studentCardUrl) return setError('Vui lòng tải lên Ảnh thẻ sinh viên (Mặt trước)');
+    if (!selfieWithStudentCardUrl) return setError('Vui lòng tải lên Ảnh chụp chân dung cầm thẻ sinh viên');
 
     try {
       setLoading(true);
-      setError(null);
 
-      const payload = {
+      const payload: RegisterParticipantPayload = {
         account_type: accountType,
         email: email.trim().toLowerCase(),
+        phone_number: phoneNumber.trim(),
         password,
         full_name: fullName.trim(),
-        cccd_number: cccdNumber.trim(),
-        cccd_front_url: cccdFrontUrl,
-        cccd_back_url: cccdBackUrl,
-        ...(accountType === 'dut_student'
-          ? {
-              student_id: studentId.trim(),
-              faculty_name: facultyName,
-              class_name: className.trim(),
-              student_card_url: studentCardUrl,
-              selfie_with_student_card_url: selfieWithStudentCardUrl,
-            }
-          : {
-              username: username.trim().toLowerCase(),
-            }),
+        student_id: studentId.trim(),
+        university_name: universityName,
+        faculty_name: facultyName,
+        class_name: className.trim(),
+        student_card_url: studentCardUrl,
+        selfie_with_student_card_url: selfieWithStudentCardUrl,
       };
 
       const res = await participantAPI.register(payload);
-      if (res.success) {
-        authAPI.logout();
-        setSuccess('Đăng ký tài khoản giải đấu thành công! Vui lòng đăng nhập để tiếp tục.');
-        const user = (res.data || (res as any).user || (res as any).participant) as SafeUser;
-        const identifier = (accountType === 'dut_student' ? studentId.trim() : username.trim()) || email.trim();
+      if (res.success && (res.data || res.participant)) {
+        const user = (res.data || res.participant) as SafeUser;
+        if (res.token && typeof window !== 'undefined') {
+          localStorage.setItem('auth_token', res.token);
+          localStorage.setItem('student_user', JSON.stringify(user));
+        }
+        setSuccess('Đăng ký tài khoản sinh viên thành công! Đang chuyển hướng đến trang Chờ duyệt...');
         setTimeout(() => {
-          if (user) onSuccess?.(user, identifier);
-        }, 1200);
+          window.location.href = '/pending-approval';
+        }, 1000);
       } else {
         setError(res.message || 'Đăng ký thất bại, vui lòng kiểm tra lại thông tin');
       }
@@ -182,309 +116,217 @@ export default function ParticipantRegisterForm({ onSuccess, onCancel }: Partici
   };
 
   return (
-    <div className="prf-container">
+    <form className="prf-form" onSubmit={handleSubmit}>
       <div className="prf-header">
-        <div className="prf-badge">🏆 DUT Esports Portal</div>
-        <h2>Đăng Ký Tài Khoản Giải Đấu</h2>
-        <p>Chọn loại tài khoản và cung cấp giấy tờ xác thực để tham gia thi đấu</p>
+        <h3>📝 Đăng Ký Tài Khoản Sinh Viên Tham Gia Giải Đấu</h3>
+        <p>Xác minh danh tính sinh viên thông qua Thẻ sinh viên (Không dùng CCCD)</p>
       </div>
 
-      {/* Tabs chọn loại tài khoản */}
-      <div className="prf-type-selector">
-        <button
-          type="button"
-          className={`prf-type-btn ${accountType === 'dut_student' ? 'active' : ''}`}
-          onClick={() => setAccountType('dut_student')}
-          disabled={loading}
-        >
-          <span className="prf-type-icon">🎓</span>
-          <span>Sinh Viên DUT</span>
-        </button>
-        <button
-          type="button"
-          className={`prf-type-btn ${accountType === 'external' ? 'active' : ''}`}
-          onClick={() => setAccountType('external')}
-          disabled={loading}
-        >
-          <span className="prf-type-icon">🌐</span>
-          <span>Game Thủ Tự Do</span>
-        </button>
-      </div>
+      {error && <div className="prf-alert prf-alert-error">⚠️ {error}</div>}
+      {success && <div className="prf-alert prf-alert-success">✓ {success}</div>}
 
-      <form className="prf-form" onSubmit={handleSubmit}>
-        {/* THÔNG TIN CHUNG */}
-        <div className="prf-section-title">
-          <span>👤 Thông Tin Cá Nhân</span>
-        </div>
+      {/* THÔNG TIN CÁ NHÂN */}
+      <div className="prf-section">
+        <div className="prf-section-title">👤 Thông Tin Cá Nhân</div>
 
-        <div className="prf-row">
+        <div className="prf-grid-2">
           <div className="prf-group">
             <label>Họ và Tên *</label>
             <input
               type="text"
-              placeholder="VD: Nguyễn Văn An"
+              required
+              placeholder="VD: Nguyễn Văn A"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              required
               disabled={loading}
             />
           </div>
+
           <div className="prf-group">
-            <label>Email Liên Hệ *</label>
+            <label>Số Điện Thoại *</label>
             <input
-              type="email"
-              placeholder={accountType === 'dut_student' ? 'VD: 102230000@sv1.dut.udn.vn' : 'VD: email@example.com'}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
               required
-              disabled={loading}
-            />
-            <span className="prf-hint">Dùng để nhận thông báo duyệt hồ sơ và giải đấu</span>
-          </div>
-        </div>
-
-        <div className="prf-row">
-          <div className="prf-group">
-            <label>Mật Khẩu *</label>
-            <input
-              type="password"
-              placeholder="Tối thiểu 6 ký tự"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="VD: 0905123456"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
               disabled={loading}
             />
           </div>
-          <div className="prf-group">
-            <label>Xác Nhận Mật Khẩu *</label>
-            <input
-              type="password"
-              placeholder="Nhập lại mật khẩu"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-          </div>
-        </div>
-
-        {/* THÔNG TIN ĐẶC THÙ THEO LOẠI TÀI KHOẢN */}
-        {accountType === 'dut_student' ? (
-          <>
-            <div className="prf-section-title">
-              <span>🎓 Thông Tin Sinh Viên DUT</span>
-            </div>
-
-            <div className="prf-row">
-              <div className="prf-group">
-                <label>Mã Số Sinh Viên (MSSV) *</label>
-                <input
-                  type="text"
-                  placeholder="VD: 102230123"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ''))}
-                  required
-                  disabled={loading}
-                  maxLength={15}
-                />
-              </div>
-              <div className="prf-group">
-                <label>Lớp Sinh Hoạt *</label>
-                <input
-                  type="text"
-                  placeholder="VD: 23TCLC_DT1"
-                  value={className}
-                  onChange={(e) => setClassName(e.target.value)}
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="prf-group">
-              <label>Khoa *</label>
-              <select
-                value={facultyName}
-                onChange={(e) => setFacultyName(e.target.value)}
-                required
-                disabled={loading}
-              >
-                <option value="">-- Chọn Khoa tại Đại học Bách khoa --</option>
-                {faculties.map((f) => (
-                  <option key={f} value={f}>
-                    {f}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="prf-section-title">
-              <span>🌐 Thông Tin Tài Khoản Tự Do</span>
-            </div>
-            <div className="prf-group">
-              <label>Tên Đăng Nhập (Username) *</label>
-              <input
-                type="text"
-                placeholder="VD: shadow_ninja99"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                disabled={loading}
-                autoCapitalize="none"
-              />
-              <span className="prf-hint">Dùng để đăng nhập và hiển thị tên người chơi</span>
-            </div>
-          </>
-        )}
-
-        {/* XÁC THỰC GIẤY TỜ TUỲ THÂN (CCCD) */}
-        <div className="prf-section-title">
-          <span>🪪 Giấy Tờ Xác Thực CCCD/CMND</span>
         </div>
 
         <div className="prf-group">
-          <label>Số Căn Cước Công Dân (CCCD / CMND) *</label>
+          <label>Email Liên Hệ *</label>
           <input
-            type="text"
-            placeholder="VD: 048203001234 (9-12 số)"
-            value={cccdNumber}
-            onChange={(e) => setCccdNumber(e.target.value.replace(/\D/g, ''))}
+            type="email"
             required
+            placeholder="VD: sinhvien@dut.udn.vn"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             disabled={loading}
-            maxLength={12}
           />
         </div>
 
-        <div className="prf-upload-grid">
-          {/* CCCD Mặt Trước */}
-          <div
-            className={`prf-upload-box ${cccdFrontUrl ? 'has-image' : ''}`}
-            onClick={() => cccdFrontRef.current?.click()}
-          >
-            <div className="prf-upload-label">Ảnh Mặt Trước CCCD *</div>
-            {cccdFrontUrl ? (
-              <img src={cccdFrontUrl} alt="CCCD Mặt trước" className="prf-preview-img" />
-            ) : (
-              <div className="prf-upload-placeholder">
-                <span className="prf-upload-icon">📷</span>
-                <span>{uploadingField === 'cccd_front' ? '⏳ Đang tải ảnh...' : 'Nhấn để tải ảnh mặt trước'}</span>
-                <span className="prf-upload-btn-mini">Chọn ảnh</span>
-              </div>
-            )}
+        <div className="prf-grid-2">
+          <div className="prf-group">
+            <label>Mật Khẩu *</label>
+            <div className="prf-password-wrapper">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="Tối thiểu 6 ký tự"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+              <button
+                type="button"
+                className="prf-eye-btn"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label="Ẩn hiện mật khẩu"
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+          </div>
+
+          <div className="prf-group">
+            <label>Xác Nhận Mật Khẩu *</label>
             <input
-              type="file"
-              ref={cccdFrontRef}
-              className="prf-file-input"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'cccd_front')}
+              type={showPassword ? 'text' : 'password'}
+              required
+              placeholder="Nhập lại mật khẩu"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* THÔNG TIN HỌC TẬP */}
+      <div className="prf-section">
+        <div className="prf-section-title">🎓 Thông Tin Học Tập</div>
+
+        <div className="prf-group">
+          <label>Trường Đại Học *</label>
+          <select
+            value={universityName}
+            onChange={(e) => setUniversityName(e.target.value)}
+            disabled={loading}
+          >
+            {UNIVERSITIES.map((uni) => (
+              <option key={uni} value={uni}>{uni}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="prf-grid-2">
+          <div className="prf-group">
+            <label>Mã Sinh Viên (MSSV) *</label>
+            <input
+              type="text"
+              required
+              placeholder="VD: 102230123"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ''))}
+              disabled={loading}
             />
           </div>
 
-          {/* CCCD Mặt Sau */}
-          <div
-            className={`prf-upload-box ${cccdBackUrl ? 'has-image' : ''}`}
-            onClick={() => cccdBackRef.current?.click()}
-          >
-            <div className="prf-upload-label">Ảnh Mặt Sau CCCD *</div>
-            {cccdBackUrl ? (
-              <img src={cccdBackUrl} alt="CCCD Mặt sau" className="prf-preview-img" />
-            ) : (
-              <div className="prf-upload-placeholder">
-                <span className="prf-upload-icon">📷</span>
-                <span>{uploadingField === 'cccd_back' ? '⏳ Đang tải ảnh...' : 'Nhấn để tải ảnh mặt sau'}</span>
-                <span className="prf-upload-btn-mini">Chọn ảnh</span>
-              </div>
-            )}
+          <div className="prf-group">
+            <label>Lớp Sinh Hoạt *</label>
             <input
-              type="file"
-              ref={cccdBackRef}
-              className="prf-file-input"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'cccd_back')}
+              type="text"
+              required
+              placeholder="VD: 23TCLC_DT1"
+              value={className}
+              onChange={(e) => setClassName(e.target.value)}
+              disabled={loading}
             />
           </div>
         </div>
 
-        {/* XÁC THỰC THẺ SINH VIÊN (Chỉ hiện khi là dut_student) */}
-        {accountType === 'dut_student' && (
-          <>
-            <div className="prf-section-title">
-              <span>🎴 Xác Thực Thẻ Sinh Viên DUT</span>
-            </div>
+        <div className="prf-group">
+          <label>Khoa / Viện Đào Tạo *</label>
+          <select
+            value={facultyName}
+            onChange={(e) => setFacultyName(e.target.value)}
+            disabled={loading}
+          >
+            {DUT_FACULTIES.map((fac) => (
+              <option key={fac} value={fac}>{fac}</option>
+            ))}
+          </select>
+        </div>
+      </div>
 
-            <div className="prf-upload-grid">
-              {/* Thẻ sinh viên */}
-              <div
-                className={`prf-upload-box ${studentCardUrl ? 'has-image' : ''}`}
-                onClick={() => studentCardRef.current?.click()}
-              >
-                <div className="prf-upload-label">Ảnh Thẻ Sinh Viên *</div>
-                {studentCardUrl ? (
-                  <img src={studentCardUrl} alt="Thẻ sinh viên" className="prf-preview-img" />
-                ) : (
-                  <div className="prf-upload-placeholder">
-                    <span className="prf-upload-icon">🪪</span>
-                    <span>{uploadingField === 'student_card' ? '⏳ Đang tải ảnh...' : 'Nhấn để tải ảnh Thẻ SV'}</span>
-                    <span className="prf-upload-btn-mini">Chọn ảnh</span>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={studentCardRef}
-                  className="prf-file-input"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'student_card')}
-                />
-              </div>
+      {/* XÁC THỰC THẺ SINH VIÊN (2 ẢNH) */}
+      <div className="prf-section">
+        <div className="prf-section-title">📷 Ảnh Thẻ Sinh Viên Xác Thực (2 Ảnh)</div>
+        <p className="prf-upload-hint">
+          Hệ thống chỉ yêu cầu 2 ảnh thẻ sinh viên để bảo vệ quyền riêng tư (Không dùng CCCD).
+        </p>
 
-              {/* Selfie cầm thẻ */}
-              <div
-                className={`prf-upload-box ${selfieWithStudentCardUrl ? 'has-image' : ''}`}
-                onClick={() => selfieCardRef.current?.click()}
-              >
-                <div className="prf-upload-label">Ảnh Selfie Cầm Thẻ SV *</div>
-                {selfieWithStudentCardUrl ? (
-                  <img src={selfieWithStudentCardUrl} alt="Selfie cầm thẻ" className="prf-preview-img" />
-                ) : (
-                  <div className="prf-upload-placeholder">
-                    <span className="prf-upload-icon">🤳</span>
-                    <span>{uploadingField === 'selfie_card' ? '⏳ Đang tải ảnh...' : 'Ảnh chân dung cầm thẻ'}</span>
-                    <span className="prf-upload-btn-mini">Chọn ảnh</span>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={selfieCardRef}
-                  className="prf-file-input"
-                  accept="image/*"
-                  onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'selfie_card')}
-                />
+        <div className="prf-grid-2">
+          {/* Thẻ SV Mặt Trước */}
+          <div
+            className={`prf-upload-box ${studentCardUrl ? 'has-image' : ''}`}
+            onClick={() => studentCardRef.current?.click()}
+          >
+            <div className="prf-upload-label">🪪 Ảnh Mặt Trước Thẻ SV *</div>
+            {studentCardUrl ? (
+              <img src={studentCardUrl} alt="Thẻ SV Mặt trước" className="prf-preview-img" />
+            ) : (
+              <div className="prf-upload-placeholder">
+                <span className="prf-upload-icon">📷</span>
+                <span>{uploadingField === 'student_card' ? '⏳ Đang tải ảnh...' : 'Nhấn để tải ảnh thẻ SV'}</span>
               </div>
-            </div>
-          </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              ref={studentCardRef}
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'student_card')}
+            />
+          </div>
+
+          {/* Selfie Cầm Thẻ SV */}
+          <div
+            className={`prf-upload-box ${selfieWithStudentCardUrl ? 'has-image' : ''}`}
+            onClick={() => selfieRef.current?.click()}
+          >
+            <div className="prf-upload-label">🤳 Ảnh Chân Dung Cầm Thẻ SV *</div>
+            {selfieWithStudentCardUrl ? (
+              <img src={selfieWithStudentCardUrl} alt="Selfie cầm thẻ SV" className="prf-preview-img" />
+            ) : (
+              <div className="prf-upload-placeholder">
+                <span className="prf-upload-icon">🤳</span>
+                <span>{uploadingField === 'selfie' ? '⏳ Đang tải ảnh...' : 'Nhấn để tải ảnh selfie cầm thẻ'}</span>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              ref={selfieRef}
+              onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'selfie')}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="prf-actions">
+        {onCancel && (
+          <button type="button" className="prf-btn-cancel" onClick={onCancel} disabled={loading}>
+            Hủy Bỏ
+          </button>
         )}
-
-        {/* Thông báo lỗi / thành công */}
-        {error && <div className="prf-error-banner">⚠️ {error}</div>}
-        {success && <div className="prf-success-banner">✓ {success}</div>}
-
-        {/* Nút gửi */}
-        <button type="submit" className="prf-submit-btn" disabled={loading || Boolean(uploadingField)}>
-          {loading ? (
-            <>
-              <span className="prf-spinner"></span>
-              <span>Đang gửi hồ sơ...</span>
-            </>
-          ) : (
-            <>
-              <span>🚀</span>
-              <span>Đăng Ký & Gửi Hồ Sơ Xét Duyệt</span>
-            </>
-          )}
+        <button type="submit" className="prf-btn-submit" disabled={loading}>
+          {loading ? '⏳ Đang Xử Lý...' : '🚀 Hoàn Tất Đăng Ký'}
         </button>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 }

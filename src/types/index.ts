@@ -1,11 +1,12 @@
 /**
  * Domain types dùng chung toàn bộ frontend.
- * Phản ánh đúng cấu trúc dữ liệu trả về từ backend.
+ * Phản ánh đúng cấu trúc dữ liệu trả về từ backend và database schema chuẩn hóa (18 bảng).
+ * Zero CCCD Invariant: Tuyệt đối không dùng thông tin hay hình ảnh CCCD/CMND.
  */
 
 export type UserRole = 'admin' | 'ctv' | 'user';
 
-export type ParticipantAccountType = 'dut_student' | 'external' | 'dut' | 'free';
+export type ParticipantAccountType = 'internal' | 'external' | 'dut_student' | 'dut' | 'free';
 
 export type ParticipantStatus = 'pending' | 'approved' | 'rejected';
 
@@ -22,20 +23,26 @@ export interface SafeUser {
   full_name: string;
   student_id: string | null;
   phone?: string | null;
+  phone_number?: string | null;
+  university_name?: string | null;
   faculty?: string | null;
   faculty_name?: string | null;
   class_name: string | null;
   course?: string | null;
   role?: UserRole;
   account_type?: ParticipantAccountType;
-  cccd_number?: string | null;
-  cccd_front_url?: string | null;
-  cccd_back_url?: string | null;
+  
+  // KYC 2 ảnh Thẻ Sinh Viên
   student_card_url?: string | null;
   selfie_with_student_card_url?: string | null;
+  
+  // Trạng thái phê duyệt
   status?: ParticipantStatus;
+  approved_by?: string | null;
+  approved_at?: string | null;
   rejection_reason?: string | null;
   rejected_at?: string | null;
+  
   is_active?: boolean;
   is_banned?: boolean;
   ban_reason?: string | null;
@@ -45,7 +52,6 @@ export interface SafeUser {
 }
 
 export type Participant = SafeUser;
-
 
 export interface FormField {
   id: string;
@@ -94,7 +100,7 @@ export interface RegistrationMemberDetail {
   username: string;
   class_name: string | null;
   faculty_name: string | null;
-  account_type: 'dut' | 'free';
+  account_type: 'dut' | 'free' | 'internal' | 'external';
   is_captain: boolean;
 }
 
@@ -136,7 +142,6 @@ export interface Pagination {
 
 /**
  * Hình dạng phản hồi chuẩn của API.
- * Các field là optional vì mỗi endpoint trả cấu trúc khác nhau.
  */
 export interface ApiResponse<T = unknown> {
   success: boolean;
@@ -144,6 +149,8 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   token?: string;
   redirectTo?: string;
+  status?: ParticipantStatus;
+  participant?: SafeUser;
   user?: SafeUser;
   tournament?: Partial<Tournament>;
   pagination?: Pagination;

@@ -14,7 +14,7 @@ import TournamentManager from './TournamentManager';
 const menuItems = [
   { id: 'overview', label: 'Tổng Quan', icon: '📊' },
   { id: 'ctv', label: 'Quản Lý CTV', icon: '👥' },
-  { id: 'participants', label: 'Quản Lý Người Dùng', icon: '👤' },
+  { id: 'participants', label: 'Hồ Sơ Sinh Viên (KYC)', icon: '🪪' },
   { id: 'tournaments', label: 'Quản Lý Giải Đấu', icon: '🏆' },
 ];
 
