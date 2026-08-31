@@ -88,7 +88,13 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
           }
         }
 
-        // Logic Router / Guard theo 3 trạng thái:
+        // 1. Nếu là Admin hoặc CTV -> Điều hướng ngay vào Dashboard Quản trị (/admin)
+        if (isAdminOrCtv) {
+          window.location.href = '/admin';
+          return;
+        }
+
+        // 2. Logic Router / Guard theo 3 trạng thái cho Sinh viên:
         if (user?.status === 'pending') {
           window.location.href = '/pending-approval';
           return;
@@ -99,7 +105,7 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
           return;
         }
 
-        // Với tài khoản đã được duyệt (approved): điều hướng về trang chủ chính
+        // Với tài khoản sinh viên đã được duyệt (approved): điều hướng về trang chủ chính
         window.location.href = '/';
       } else {
         setError(result.message || 'Thông tin đăng nhập hoặc mật khẩu không chính xác');

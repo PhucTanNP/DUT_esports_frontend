@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { participantAPI } from '../services/participant.service';
+import { authAPI } from '../services/auth.service';
 import type { SafeUser } from '../types';
 import '../styles/StudentRegistrationForm.css';
 
@@ -29,18 +30,49 @@ export default function StudentLoginForm({ onSuccess, onSwitchToRegister }: Stud
 
     try {
       setLoading(true);
-      const result = await participantAPI.login(cleanId, password);
+      let result = await participantAPI.login(cleanId, password);
+
+      // Thử đăng nhập Admin/CTV nếu login sinh viên không khớp
+      if (!result.success) {
+        const adminRes = await authAPI.login(cleanId, password);
+        if (adminRes.success) {
+          result = adminRes as any;
+        }
+      }
 
       if (result.success && (result.data || (result as any).user || (result as any).participant)) {
         const user = (result.data || (result as any).user || (result as any).participant) as SafeUser;
+        const role = user?.role?.toLowerCase();
+        const isAdminOrCtv = role === 'admin' || role === 'ctv' || result.redirectTo === 'admin-dashboard' || result.redirectTo === '/admin';
+
         if (typeof window !== 'undefined') {
           if (result.token) {
-            localStorage.setItem('auth_token', result.token);
+            if (isAdminOrCtv) {
+              sessionStorage.setItem('auth_token', result.token);
+              localStorage.removeItem('auth_token');
+            } else {
+              localStorage.setItem('auth_token', result.token);
+              sessionStorage.removeItem('auth_token');
+            }
           }
-          localStorage.setItem('student_user', JSON.stringify(user));
+          if (isAdminOrCtv) {
+            sessionStorage.setItem('admin_user', JSON.stringify(user));
+            sessionStorage.setItem('student_user', JSON.stringify(user));
+            localStorage.removeItem('admin_user');
+            localStorage.removeItem('student_user');
+          } else {
+            localStorage.setItem('student_user', JSON.stringify(user));
+            sessionStorage.removeItem('admin_user');
+          }
         }
 
-        // Logic Router / Guard theo 3 trạng thái
+        // 1. Nếu là Admin hoặc CTV -> Điều hướng ngay vào Dashboard Quản trị (/admin)
+        if (isAdminOrCtv) {
+          window.location.href = '/admin';
+          return;
+        }
+
+        // 2. Logic Router / Guard theo 3 trạng thái cho Sinh viên
         if (user.status === 'pending') {
           window.location.href = '/pending-approval';
           return;
@@ -50,7 +82,7 @@ export default function StudentLoginForm({ onSuccess, onSwitchToRegister }: Stud
           return;
         }
 
-        // Với tài khoản đã duyệt (approved): điều hướng tới trang chủ chính
+        // Với tài khoản sinh viên đã duyệt (approved): điều hướng tới trang chủ chính
         window.location.href = '/';
       } else {
         setError(result.message || 'Email/MSSV hoặc mật khẩu không chính xác');
