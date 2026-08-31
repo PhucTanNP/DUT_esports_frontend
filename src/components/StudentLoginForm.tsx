@@ -50,11 +50,8 @@ export default function StudentLoginForm({ onSuccess, onSwitchToRegister }: Stud
           return;
         }
 
-        if (onSuccess) {
-          onSuccess(user);
-        } else {
-          window.location.href = '/';
-        }
+        // Với tài khoản đã duyệt (approved): điều hướng tới trang chủ chính
+        window.location.href = '/';
       } else {
         setError(result.message || 'Email/MSSV hoặc mật khẩu không chính xác');
       }

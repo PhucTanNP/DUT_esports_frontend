@@ -65,6 +65,9 @@ export default function Header({ user: propUser, onLoginClick, onLogoutClick }: 
     setMenuOpen(false);
     setProfileOpen(false);
     setStatusMessage('');
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.location.href = '/';
+    }
   };
 
   const handleMenuAction = (action: 'profile' | 'tournaments' | 'password') => {

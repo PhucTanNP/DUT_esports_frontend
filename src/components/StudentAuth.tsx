@@ -99,22 +99,8 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
           return;
         }
 
-        const redirectUrl = getRedirectUrl(result as any, user);
-        if (redirectUrl && redirectUrl !== '/') {
-          window.location.href = redirectUrl;
-          return;
-        }
-
-        if (user) {
-          onSuccess?.(user);
-        } else {
-          const fallback = await participantAPI.getMyProfile();
-          if (fallback.success && fallback.data) {
-            onSuccess?.(fallback.data as SafeUser);
-          } else {
-            setError(result.message || 'Đăng nhập thành công nhưng chưa nhận được thông tin người dùng.');
-          }
-        }
+        // Với tài khoản đã được duyệt (approved): điều hướng về trang chủ chính
+        window.location.href = '/';
       } else {
         setError(result.message || 'Thông tin đăng nhập hoặc mật khẩu không chính xác');
       }

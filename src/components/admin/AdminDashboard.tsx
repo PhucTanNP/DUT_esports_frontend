@@ -120,6 +120,9 @@ export default function AdminDashboard() {
     setIsLoggedIn(false);
     setUser(null);
     setActiveSection('overview');
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   if (loading) {

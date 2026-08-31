@@ -39,6 +39,9 @@ export default function CTVDashboard() {
   const handleLogout = () => {
     authAPI.logout();
     setUser(null);
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
+    }
   };
 
   if (loading) {
