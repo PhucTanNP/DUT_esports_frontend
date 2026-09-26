@@ -4,7 +4,7 @@ import TournamentDetail from '../../../screens/TournamentDetail';
 
 export default function TournamentDetailPage() {
   return (
-    <div className="app">
+    <div className="app" suppressHydrationWarning>
       <Header />
       <TournamentDetail />
       <Footer />

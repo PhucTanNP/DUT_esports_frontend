@@ -1,5 +1,11 @@
+/* ============================================================
+   HomePage.css — Ferrari Motorsport Dark Theme
+   Primary accent: #e10600 (Racing Red)
+   Background: deep black with subtle red radial warmth
+   ============================================================ */
+
 .homepage {
-  background: linear-gradient(135deg, #0A0E27 0%, #1a1a3e 50%, #0A0E27 100%);
+  background: radial-gradient(ellipse at top, #1a0808 0%, #050505 60%, #050505 100%);
   min-height: 100vh;
   padding: 60px 20px;
 }
@@ -12,10 +18,10 @@
 .section-title {
   font-size: 48px;
   font-weight: bold;
-  color: #FFFFFF;
+  color: #ffffff;
   margin-bottom: 50px;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   position: relative;
   display: inline-block;
 }
@@ -25,10 +31,10 @@
   position: absolute;
   left: 0;
   bottom: -10px;
-  width: 60px;
-  height: 4px;
-  background: #FF6B00;
-  border-radius: 2px;
+  width: 48px;
+  height: 3px;
+  background: #e10600;
+  border-radius: 1px;
 }
 
 .tournaments-grid {
@@ -44,7 +50,7 @@
 }
 
 .view-more-link {
-  color: #FF6B00;
+  color: #e10600;
   text-decoration: none;
   font-size: 16px;
   font-weight: 600;
@@ -61,7 +67,7 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  color: #fff;
+  color: #a3a3a3;
   font-size: 18px;
 }
 
@@ -70,16 +76,16 @@
   align-items: center;
   justify-content: center;
   min-height: 400px;
-  color: #aaa;
+  color: #737373;
   font-size: 18px;
 }
 
 .error-banner {
-  background: rgba(211, 47, 47, 0.15);
-  border: 1px solid rgba(211, 47, 47, 0.3);
-  color: #ff6b6b;
+  background: rgba(225, 6, 0, 0.1);
+  border: 1px solid rgba(225, 6, 0, 0.3);
+  color: #ff4444;
   padding: 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   margin-bottom: 24px;
   font-weight: 500;
 }

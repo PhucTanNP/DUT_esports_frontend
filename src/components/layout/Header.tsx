@@ -73,11 +73,11 @@ export default function Header({ user: propUser, onLoginClick, onLogoutClick }: 
   const handleMenuAction = (action: 'profile' | 'tournaments' | 'password') => {
     if (action === 'profile') {
       window.location.href = '/profile';
+    } else if (action === 'tournaments') {
+      window.location.href = '/my-tournaments';
     } else {
       setProfileOpen(false);
-      setStatusMessage(action === 'tournaments'
-        ? 'Tính năng “Các giải đấu đã đăng ký” sẽ được cập nhật trong thời gian tới.'
-        : 'Tính năng đổi mật khẩu sẽ được cập nhật trong thời gian tới.');
+      setStatusMessage('Tính năng đổi mật khẩu sẽ được cập nhật trong thời gian tới.');
     }
   };
 
@@ -109,8 +109,8 @@ export default function Header({ user: propUser, onLoginClick, onLogoutClick }: 
 
   return (
     <>
-      <header className="header">
-        <div className="header-container">
+      <header className="header" suppressHydrationWarning>
+        <div className="header-container" suppressHydrationWarning>
           <div className="logo">
             <Link href="/" aria-label="Trang chủ">
               <img src={logo.src} alt="E-Sports Đà Nẵng Logo" className="logo-img" />

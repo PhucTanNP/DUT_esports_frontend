@@ -85,3 +85,35 @@ export function getTimeRemaining(expiryDateInput?: Date | string | null): {
 
   return { days, hours, minutes, isExpired: false, text: text.trim() };
 }
+
+/**
+ * Chuyển ISO string từ backend (ví dụ: "2026-09-02T03:47:00.000Z")
+ * thành chuỗi định dạng cho <input type="datetime-local"> ở giờ địa phương (YYYY-MM-DDTHH:mm).
+ * Ngăn ngừa triệt để lỗi lệch 7 tiếng khi hiển thị trong form Admin/CTV.
+ */
+export function toDatetimeLocalValue(isoStr?: string | Date | null): string {
+  if (!isoStr) return '';
+  const d = typeof isoStr === 'string' ? new Date(isoStr) : isoStr;
+  if (isNaN(d.getTime())) return '';
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const year = d.getFullYear();
+  const month = pad(d.getMonth() + 1);
+  const day = pad(d.getDate());
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+/**
+ * Chuyển chuỗi datetime-local ("YYYY-MM-DDTHH:mm" theo giờ địa phương)
+ * thành ISO string chuẩn UTC (với đuôi Z) để gửi lên backend lưu vào CSDL.
+ */
+export function toISOStringFromLocal(localStr?: string | null): string {
+  if (!localStr) return '';
+  if (localStr.endsWith('Z') || localStr.includes('+')) return localStr;
+
+  const d = new Date(localStr);
+  return isNaN(d.getTime()) ? localStr : d.toISOString();
+}

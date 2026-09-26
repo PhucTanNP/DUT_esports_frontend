@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import type { ParticipantRow } from '../../services/participant.service';
+import { getAuthenticatedImageUrl } from '../../services/http';
 
 interface ParticipantKYCModalProps {
   participant: ParticipantRow | null;
@@ -212,7 +213,7 @@ export default function ParticipantKYCModal({
               <div className="image-viewport">
                 {participant.student_card_url ? (
                   <img
-                    src={participant.student_card_url}
+                    src={getAuthenticatedImageUrl(participant.student_card_url)}
                     alt="Mặt trước thẻ sinh viên"
                     className="kyc-img"
                     style={{
@@ -274,7 +275,7 @@ export default function ParticipantKYCModal({
               <div className="image-viewport">
                 {participant.selfie_with_student_card_url ? (
                   <img
-                    src={participant.selfie_with_student_card_url}
+                    src={getAuthenticatedImageUrl(participant.selfie_with_student_card_url)}
                     alt="Ảnh selfie cầm thẻ sinh viên"
                     className="kyc-img"
                     style={{
@@ -392,7 +393,7 @@ export default function ParticipantKYCModal({
       {zoomImage && (
         <div className="lightbox-overlay" onClick={() => setZoomImage(null)}>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
-            <img src={zoomImage} alt="Phóng to thẻ sinh viên" className="lightbox-img" />
+            <img src={getAuthenticatedImageUrl(zoomImage)} alt="Phóng to thẻ sinh viên" className="lightbox-img" />
             <button className="lightbox-close" onClick={() => setZoomImage(null)}>✕</button>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import TournamentCard, { type TournamentCardData } from '../components/TournamentCard';
 import { tournamentAPI } from '../services/tournament.service';
+import { registrationAPI } from '../services/registration.service';
 import '../styles/HomePage.css';
 
 /** Mock data hiển thị khi API không kết nối được. */
@@ -41,13 +42,27 @@ const getMockTournaments = (): TournamentCardData[] => [
 
 export default function HomePage() {
   const [tournaments, setTournaments] = useState<TournamentCardData[]>([]);
+  const [registeredTournamentIds, setRegisteredTournamentIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const fetchTournaments = async () => {
     try {
       setLoading(true);
-      const result = await tournamentAPI.getAll('', 'approved');
+      const [result, myRegsRes] = await Promise.all([
+        tournamentAPI.getAll('', 'approved'),
+        registrationAPI.getMyParticipations().catch(() => ({ success: false, data: [] })),
+      ]);
+
+      if (myRegsRes && myRegsRes.success && Array.isArray(myRegsRes.data)) {
+        const registeredIds = (myRegsRes.data as any[])
+          .map((r) => r.tournament_id || r.tournamentId)
+          .filter((id): id is string => Boolean(id));
+        setRegisteredTournamentIds(new Set(registeredIds));
+      } else {
+        setRegisteredTournamentIds(new Set());
+      }
+
       if (result.success) {
         const formatted: TournamentCardData[] = (result.data ?? []).map((t) => ({
           id: t.id,
@@ -83,24 +98,28 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="homepage">
-      <section className="tournaments-section">
+    <div className="homepage" suppressHydrationWarning>
+      <section className="tournaments-section" suppressHydrationWarning>
         <h1 className="section-title">GIẢI ĐẤU</h1>
 
         {error && <div className="error-banner">⚠️ {error}</div>}
 
         {loading ? (
-          <div className="loading-state">
+          <div className="loading-state" suppressHydrationWarning>
             <p>⏳ Đang tải giải đấu...</p>
           </div>
         ) : tournaments.length === 0 ? (
-          <div className="empty-state">
+          <div className="empty-state" suppressHydrationWarning>
             <p>📭 Hiện tại chưa có giải đấu nào</p>
           </div>
         ) : (
           <div className="tournaments-grid">
             {tournaments.map((tournament) => (
-              <TournamentCard key={tournament.id} tournament={tournament} />
+              <TournamentCard
+                key={tournament.id}
+                tournament={tournament}
+                isRegistered={registeredTournamentIds.has(tournament.id)}
+              />
             ))}
           </div>
         )}

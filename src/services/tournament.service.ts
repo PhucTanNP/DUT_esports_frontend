@@ -57,6 +57,14 @@ export const tournamentAPI = {
     });
   },
 
+  async cancel(id: string): Promise<ApiResponse<Tournament>> {
+    return apiRequest<Tournament>(`/tournaments/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeader(),
+      body: JSON.stringify({ status: 'cancelled' }),
+    });
+  },
+
   async getRegistrations(id: string): Promise<ApiResponse<Registration[]>> {
     return apiRequest<Registration[]>(`/tournaments/${id}/registrations`, { headers: getAuthHeader() });
   },

@@ -1,25 +1,25 @@
 /* =============================================================================
-   DUT ESPORTS - ADMIN DASHBOARD HIGH-CONTRAST MODERN THEME
-   Elevated Slate + Pure White & Vibrant Neon Accents (WCAG AAA Contrast)
+   DUT ESPORTS - ADMIN DASHBOARD FERRARI MOTORSPORT DARK THEME
+   Racing Red (#e10600) on Pitch Black — Precision Engineering Aesthetic
    ============================================================================= */
 
 :root {
-  --admin-bg: #0B0F19;
-  --admin-surface: #1E293B;
-  --admin-surface-elevated: #283548;
-  --admin-sidebar-bg: #111827;
-  --admin-topbar-bg: #111827;
-  --admin-border: #334155;
-  --admin-border-light: #475569;
+  --admin-bg: #050505;
+  --admin-surface: #111111;
+  --admin-surface-elevated: #161616;
+  --admin-sidebar-bg: #0d0d0d;
+  --admin-topbar-bg: #0d0d0d;
+  --admin-border: rgba(255, 255, 255, 0.08);
+  --admin-border-light: rgba(255, 255, 255, 0.14);
   --admin-text-primary: #FFFFFF;
   --admin-text-secondary: #E2E8F0;
-  --admin-text-muted: #94A3B8;
-  --admin-primary: #FF6B00;
-  --admin-primary-hover: #FF8C00;
-  --admin-cyan: #38BDF8;
-  --admin-green: #34D399;
-  --admin-red: #F87171;
-  --admin-amber: #FBBF24;
+  --admin-text-muted: #737373;
+  --admin-primary: #e10600;
+  --admin-primary-hover: #b80500;
+  --admin-cyan: #38BDF8;  /* keep for info */
+  --admin-green: #34D399; /* keep for success */
+  --admin-red: #ff4444;
+  --admin-amber: #FBBF24; /* keep for warning */
 }
 
 /* ===== ADMIN DASHBOARD LAYOUT ===== */
@@ -59,9 +59,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 18px 16px;
-  border-bottom: 1px solid var(--admin-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   min-height: 70px;
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba(5, 5, 5, 0.98);
 }
 
 .sidebar-logo {
@@ -74,7 +74,7 @@
 .sidebar-logo-icon {
   font-size: 26px;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 10px rgba(255, 107, 0, 0.8));
+  filter: drop-shadow(0 0 10px rgba(225, 6, 0, 0.8));
 }
 
 .sidebar-logo-text {
@@ -83,15 +83,15 @@
   color: #FFFFFF;
   white-space: nowrap;
   letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #FF6B00 0%, #FFA149 100%);
+  background: linear-gradient(135deg, #e10600 0%, #ff4444 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .sidebar-toggle {
-  background: #1E293B;
-  border: 1px solid var(--admin-border);
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #F8FAFC;
   width: 30px;
   height: 30px;
@@ -106,8 +106,8 @@
 }
 
 .sidebar-toggle:hover {
-  background: #334155;
-  border-color: #64748B;
+  background: #161616;
+  border-color: rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
 }
 
@@ -130,7 +130,7 @@
   border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
-  color: #CBD5E1;
+  color: #a3a3a3;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -142,16 +142,16 @@
 }
 
 .sidebar-nav-item:hover {
-  background: #1E293B;
-  color: #FFFFFF;
-  border-color: #334155;
+  background: #111111;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .sidebar-nav-item.active {
-  background: linear-gradient(135deg, rgba(255, 107, 0, 0.2) 0%, rgba(255, 140, 0, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(225, 6, 0, 0.2) 0%, rgba(184, 5, 0, 0.1) 100%);
   color: #FFFFFF;
-  border: 1px solid rgba(255, 107, 0, 0.5);
-  box-shadow: 0 4px 15px rgba(255, 107, 0, 0.15);
+  border: 1px solid rgba(225, 6, 0, 0.5);
+  box-shadow: 0 4px 15px rgba(225, 6, 0, 0.15);
 }
 
 .nav-icon {
@@ -170,19 +170,19 @@
   transform: translateY(-50%);
   width: 3.5px;
   height: 65%;
-  background: #FF6B00;
+  background: #e10600;
   border-radius: 4px 0 0 4px;
-  box-shadow: 0 0 8px #FF6B00;
+  box-shadow: 0 0 8px #e10600;
 }
 
 /* ===== SIDEBAR FOOTER ===== */
 .sidebar-footer {
   padding: 14px 12px;
-  border-top: 1px solid var(--admin-border);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  background: rgba(17, 24, 39, 0.95);
+  background: rgba(5, 5, 5, 0.98);
 }
 
 .sidebar-user {
@@ -191,15 +191,15 @@
   gap: 10px;
   padding: 10px;
   border-radius: 10px;
-  background: #1E293B;
-  border: 1px solid var(--admin-border);
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-avatar {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FF6B00, #FF8C00);
+  background: linear-gradient(135deg, #e10600, #b80500);
   color: #FFFFFF;
   display: flex;
   align-items: center;
@@ -207,7 +207,7 @@
   font-weight: 800;
   font-size: 15px;
   flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(255, 107, 0, 0.4);
+  box-shadow: 0 2px 8px rgba(225, 6, 0, 0.4);
 }
 
 .sidebar-user-info {
@@ -225,7 +225,7 @@
 
 .sidebar-user-role {
   font-size: 11px;
-  color: #94A3B8;
+  color: #737373;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.4px;
@@ -237,20 +237,20 @@
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  color: #CBD5E1;
+  color: #a3a3a3;
   font-size: 13px;
   font-weight: 600;
   text-decoration: none;
-  background: #1E293B;
-  border: 1px solid var(--admin-border);
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   transition: all 0.2s;
   white-space: nowrap;
 }
 
 .sidebar-exit-btn:hover {
-  background: rgba(255, 107, 0, 0.15);
-  border-color: rgba(255, 107, 0, 0.4);
-  color: #FF8C00;
+  background: rgba(225, 6, 0, 0.12);
+  border-color: rgba(225, 6, 0, 0.4);
+  color: #ff4444;
 }
 
 /* ===== MAIN AREA ===== */

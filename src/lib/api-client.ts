@@ -11,7 +11,17 @@ import type { ApiResponse } from '@/types';
  *   const res = await apiClient<Tournament>('/tournaments', { method: 'POST', body: JSON.stringify(data) });
  */
 
-const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:5000/api';
+export const getApiBase = (): string => {
+  if (process.env.NEXT_PUBLIC_API_BASE) {
+    return process.env.NEXT_PUBLIC_API_BASE;
+  }
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:5000/api`;
+  }
+  return 'http://localhost:5000/api';
+};
+
+const API_BASE: string = getApiBase();
 
 /** Token getter — được đăng ký 1 lần từ auth-store để tránh import vòng. */
 let tokenGetter: () => string | null = () => null;
@@ -51,7 +61,8 @@ export async function apiClient<T = unknown>(
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${API_BASE}${path}`, { ...rest, headers, body, cache: 'no-store' });
+  const baseUrl = getApiBase();
+  const response = await fetch(`${baseUrl}${path}`, { ...rest, headers, body, cache: 'no-store' });
 
   const json: ApiResponse<T> | null = await response.json().catch(() => null);
 

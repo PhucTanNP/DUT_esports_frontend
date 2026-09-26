@@ -1,6 +1,6 @@
 .header {
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 50, 0.9) 100%);
-  border-bottom: 2px solid #FF6B00;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.98) 0%, rgba(10, 10, 10, 0.95) 100%);
+  border-bottom: 2px solid #e10600;
   height: 70px;
   overflow: visible;
   position: sticky;
@@ -55,7 +55,7 @@
 }
 
 .nav-link:hover {
-  color: #FF6B00;
+  color: #e10600;
 }
 
 .nav-link::after {
@@ -65,7 +65,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: #FF6B00;
+  background: #e10600;
   transition: width 0.3s ease;
 }
 
@@ -90,20 +90,20 @@
   }
 }
 
-/* Admin link special style */
+/* Admin link special style — Ferrari dim red tint */
 .nav-link-admin {
-  border: 1px solid rgba(255, 107, 0, 0.5);
+  border: 1px solid rgba(225, 6, 0, 0.5);
   padding: 5px 12px;
-  border-radius: 6px;
-  color: #FF8C00 !important;
-  background: rgba(255, 107, 0, 0.08);
+  border-radius: 4px;
+  color: #e10600 !important;
+  background: rgba(225, 6, 0, 0.08);
   transition: all 0.3s ease;
 }
 
 .nav-link-admin:hover {
-  background: rgba(255, 107, 0, 0.18);
-  border-color: #FF6B00;
-  color: #FF6B00 !important;
+  background: rgba(225, 6, 0, 0.18);
+  border-color: #e10600;
+  color: #ff4444 !important;
 }
 
 .nav-link-admin::after {
@@ -111,7 +111,7 @@
 }
 
 /* ==========================================================
-   STUDENT AUTH — Header login button & user badge
+   STUDENT AUTH — Header login button & user badge (Ferrari theme)
    ========================================================== */
 .header-auth {
   display: flex;
@@ -120,11 +120,11 @@
 }
 
 .header-login-btn {
-  background: linear-gradient(135deg, #ff6b00, #e05e00);
+  background: linear-gradient(135deg, #e10600, #b80500);
   border: none;
   color: #fff;
   padding: 8px 16px;
-  border-radius: 8px;
+  border-radius: 4px;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
@@ -134,7 +134,7 @@
 
 .header-login-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 18px rgba(255, 107, 0, 0.4);
+  box-shadow: 0 0 18px rgba(225, 6, 0, 0.5);
 }
 
 .header-user {
@@ -147,8 +147,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 107, 0, 0.08);
-  border: 1px solid rgba(255, 107, 0, 0.3);
+  background: rgba(225, 6, 0, 0.08);
+  border: 1px solid rgba(225, 6, 0, 0.3);
   border-radius: 999px;
   padding: 5px 12px 5px 5px;
   color: #fff;
@@ -156,14 +156,14 @@
 }
 
 .header-user-trigger:hover {
-  background: rgba(255, 107, 0, 0.16);
+  background: rgba(225, 6, 0, 0.16);
 }
 
 .header-avatar {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  background: linear-gradient(135deg, #e10600, #b80500);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -192,7 +192,7 @@
 
 .header-user-mssv {
   font-size: 10px;
-  color: #ff8c00;
+  color: #e10600;
   max-width: 180px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -204,9 +204,9 @@
   top: calc(100% + 8px);
   right: 0;
   min-width: 240px;
-  background: rgba(8, 12, 24, 0.98);
-  border: 1px solid rgba(255, 107, 0, 0.35);
-  border-radius: 12px;
+  background: rgba(5, 5, 5, 0.98);
+  border: 1px solid rgba(225, 6, 0, 0.3);
+  border-radius: 6px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
   padding: 8px;
   display: flex;
@@ -221,26 +221,26 @@
   color: #f5f5f5;
   text-align: left;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 4px;
   cursor: pointer;
   font-size: 13px;
   transition: background 0.2s ease, color 0.2s ease;
 }
 
 .header-user-option:hover {
-  background: rgba(255, 107, 0, 0.16);
-  color: #ffb36b;
+  background: rgba(225, 6, 0, 0.12);
+  color: #ff6666;
 }
 
 .header-user-option-danger {
-  color: #ff8c8c;
+  color: #ff4444;
 }
 
 .header-user-status {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   padding-top: 8px;
   font-size: 12px;
-  color: #ffc08c;
+  color: #a3a3a3;
   line-height: 1.4;
 }
 
@@ -257,9 +257,9 @@
 
 .header-profile-modal {
   width: min(420px, 100%);
-  background: #fff;
-  color: #111827;
-  border-radius: 16px;
+  background: #111111;
+  color: #ffffff;
+  border-radius: 8px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
@@ -269,7 +269,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px;
-  background: linear-gradient(135deg, #ff6b00, #ff8c00);
+  background: linear-gradient(135deg, #e10600, #b80500);
   color: #fff;
 }
 
@@ -298,7 +298,7 @@
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
-  border-bottom: 1px dashed #e5e7eb;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
   font-size: 13px;
 }
 
@@ -307,12 +307,12 @@
 }
 
 .header-profile-row span {
-  color: #6b7280;
+  color: #737373;
 }
 
 .header-profile-row strong {
   text-align: right;
-  color: #111827;
+  color: #ffffff;
 }
 
 @media (max-width: 768px) {
@@ -325,4 +325,4 @@
     right: auto;
     left: 0;
   }
-}
+}

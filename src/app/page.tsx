@@ -4,7 +4,7 @@ import HomePage from '../screens/HomePage';
 
 export default function Home() {
   return (
-    <div className="app">
+    <div className="app" suppressHydrationWarning>
       <Header />
       <HomePage />
       <Footer />

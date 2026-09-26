@@ -10,24 +10,82 @@ export type ParticipantAccountType = 'internal' | 'external' | 'dut_student' | '
 
 export type ParticipantStatus = 'pending' | 'approved' | 'rejected';
 
-export type TournamentStatus = 'pending' | 'approved' | 'rejected' | 'active' | 'completed';
+export type TournamentStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected'
+  | 'active'
+  | 'completed'
+  | 'cancelled'
+  | 'draft'
+  | 'ongoing'
+  | 'registration_opened'
+  | 'registration_closed';
 
-export type RegistrationStatus = 'pending' | 'approved' | 'rejected';
+export type RegistrationStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
 
 export type ParticipationType = 'individual' | 'team';
 
+export type OrganizerType = 'permanent' | 'seasonal';
+export type OrganizerRole = 'lead_organizer' | 'co_organizer' | 'referee' | 'seasonal_staff' | 'support_staff';
+
+export interface TournamentOrganizer {
+  id: string;
+  tournament_id: string;
+  organizer_type: OrganizerType;
+  user_id?: string | null;
+  participant_id?: string | null;
+  role: OrganizerRole;
+  custom_title?: string | null;
+  assigned_by?: string | null;
+  assigned_at: string;
+
+  // Joined fields
+  user_name?: string | null;
+  user_email?: string | null;
+  participant_name?: string | null;
+  participant_email?: string | null;
+  student_id?: string | null;
+  faculty_name?: string | null;
+  assigned_by_name?: string | null;
+}
+
+export type TeamJoinRequestStatus = 'pending' | 'accepted' | 'rejected' | 'cancelled';
+
+export interface TeamJoinRequest {
+  id: string;
+  registration_id: string;
+  participant_id: string;
+  ingame_id: string;
+  message?: string | null;
+  status: TeamJoinRequestStatus;
+  processed_by?: string | null;
+  processed_at?: string | null;
+  rejection_reason?: string | null;
+  created_at: string;
+  updated_at: string;
+
+  // Joined display info
+  participant_name?: string;
+  student_id?: string | null;
+  email?: string | null;
+  faculty_name?: string | null;
+  class_name?: string | null;
+  team_name?: string | null;
+}
+
 export interface SafeUser {
   id: string;
-  email: string | null;
+  email?: string | null;
   username?: string | null;
   full_name: string;
-  student_id: string | null;
+  student_id?: string | null;
   phone?: string | null;
   phone_number?: string | null;
   university_name?: string | null;
   faculty?: string | null;
   faculty_name?: string | null;
-  class_name: string | null;
+  class_name?: string | null;
   course?: string | null;
   role?: UserRole;
   account_type?: ParticipantAccountType;
@@ -81,7 +139,12 @@ export interface Tournament {
   registration_close_at: string;
   start_at: string;
   end_at: string;
+  checkin_open_at?: string | null;
+  checkin_close_at?: string | null;
+  checkin_qr_secret?: string | null;
+  certificate_template_url?: string | null;
   description: string | null;
+  location?: string | null;
   use_external_link: boolean;
   external_registration_url: string | null;
   form_schema: FormSchema;
@@ -96,12 +159,37 @@ export interface Tournament {
 
 export interface RegistrationMemberDetail {
   participant_id: string;
+  participantId?: string;
   full_name: string;
-  username: string;
-  class_name: string | null;
-  faculty_name: string | null;
-  account_type: 'dut' | 'free' | 'internal' | 'external';
+  fullName?: string;
+  username?: string;
+  student_id?: string | null;
+  studentId?: string | null;
+  university_name?: string | null;
+  universityName?: string | null;
+  class_name?: string | null;
+  className?: string | null;
+  faculty_name?: string | null;
+  facultyName?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  phone_number?: string | null;
+  account_type?: 'dut' | 'free' | 'internal' | 'external' | string;
+  accountType?: string;
   is_captain: boolean;
+  isCaptain?: boolean;
+  ingame_id?: string | null;
+  ingameId?: string | null;
+  role_in_team?: string | null;
+  roleInTeam?: string | null;
+  joined_at?: string;
+  joinedAt?: string;
+  status?: string | null;
+  participant_status?: string | null;
+  student_card_url?: string | null;
+  studentCardUrl?: string | null;
+  selfie_with_student_card_url?: string | null;
+  selfieWithStudentCardUrl?: string | null;
 }
 
 export interface Registration {
@@ -109,8 +197,15 @@ export interface Registration {
   tournament_id: string;
   captain_id?: string;
   team_name?: string | null;
+  team_avatar_url?: string | null;
+  ingame_id?: string | null;
+  is_recruiting?: boolean;
+  recruitment_notes?: string | null;
   submitted_data: Record<string, unknown> | string;
   status: RegistrationStatus;
+  rejection_reason?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
   registered_at: string;
   updated_at: string;
   tournament_name?: string;
@@ -119,9 +214,26 @@ export interface Registration {
   form_schema?: FormSchema;
   tournament_owner?: string;
   captain_name?: string;
+  captain_student_id?: string;
   captain_username?: string;
+  captain_university_name?: string;
   captain_class_name?: string;
   captain_faculty_name?: string;
+  captain_email?: string;
+  captain_phone?: string;
+  captain_account_type?: string;
+  captain_student_card_url?: string;
+  captain_selfie_with_student_card_url?: string;
+  members?: RegistrationMemberDetail[];
+  is_captain?: boolean;
+}
+
+export interface RecruitingTeamInfo extends Registration {
+  captain_name: string;
+  captain_student_id?: string;
+  current_member_count: number;
+  min_team_size: number;
+  max_team_size: number;
   members?: RegistrationMemberDetail[];
 }
 
@@ -138,6 +250,50 @@ export interface Pagination {
   page: number;
   limit: number;
   pages: number;
+}
+
+export interface TournamentParticipantMemberDTO {
+  registrationId?: string;
+  participantId: string;
+  fullName: string;
+  studentId: string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  universityName: string | null;
+  facultyName: string | null;
+  className: string | null;
+  accountType: 'internal' | 'external';
+  ingameId: string | null;
+  roleInTeam: string | null;
+  isCaptain: boolean;
+  checkinStatus: 'not_checked_in' | 'approved' | 'pending_review' | 'rejected';
+  checkinMethod: string | null;
+  checkedInAt: string | null;
+}
+
+export interface TournamentTeamDTO {
+  registrationId: string;
+  teamName: string;
+  teamAvatarUrl: string | null;
+  captainId: string;
+  captainName: string;
+  captainStudentId: string | null;
+  status: string;
+  registeredAt: string;
+  members: TournamentParticipantMemberDTO[];
+  totalMembers: number;
+  checkedInCount: number;
+}
+
+export interface TournamentParticipantListResponseDTO {
+  tournamentId: string;
+  tournamentName: string;
+  tournamentCode: string;
+  participationType: 'individual' | 'team';
+  gameName: string;
+  status: string;
+  teams?: TournamentTeamDTO[];
+  individualParticipants?: TournamentParticipantMemberDTO[];
 }
 
 /**
@@ -157,3 +313,4 @@ export interface ApiResponse<T = unknown> {
   error?: string;
   server_time?: string;
 }
+

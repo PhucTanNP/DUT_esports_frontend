@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { getDutFaculties, DUT_FACULTIES } from '../services/auth.service';
 import { participantAPI, type ParticipantRow, UNIVERSITIES } from '../services/participant.service';
+import { getAuthenticatedImageUrl } from '../services/http';
 import StudentRejectedResubmit from './StudentRejectedResubmit';
 import '../styles/ParticipantProfile.css';
 
@@ -292,7 +293,7 @@ export default function ParticipantProfile({ initialUser, onLogout }: Participan
               <div className="pp-doc-card">
                 <span>Ảnh Thẻ Sinh Viên</span>
                 <img
-                  src={profile.student_card_url}
+                  src={getAuthenticatedImageUrl(profile.student_card_url)}
                   alt="Thẻ sinh viên"
                   className="pp-doc-img"
                   onClick={() => setZoomImage({ url: profile.student_card_url!, title: 'Ảnh Thẻ Sinh Viên' })}
@@ -304,7 +305,7 @@ export default function ParticipantProfile({ initialUser, onLogout }: Participan
               <div className="pp-doc-card">
                 <span>Ảnh Chân Dung Cầm Thẻ SV</span>
                 <img
-                  src={profile.selfie_with_student_card_url}
+                  src={getAuthenticatedImageUrl(profile.selfie_with_student_card_url)}
                   alt="Ảnh chân dung cầm thẻ"
                   className="pp-doc-img"
                   onClick={() => setZoomImage({ url: profile.selfie_with_student_card_url!, title: 'Ảnh Chân Dung Cầm Thẻ SV' })}
@@ -431,7 +432,7 @@ export default function ParticipantProfile({ initialUser, onLogout }: Participan
         <div className="pp-modal-overlay" onClick={() => setZoomImage(null)}>
           <div style={{ maxWidth: '800px', width: '90%', textAlign: 'center' }}>
             <img
-              src={zoomImage.url}
+              src={getAuthenticatedImageUrl(zoomImage.url)}
               alt={zoomImage.title}
               style={{ width: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: '12px', border: '2px solid #ff6b00' }}
             />
