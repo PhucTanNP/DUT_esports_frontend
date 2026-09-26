@@ -1,10 +1,5 @@
 .app {
   width: 100%;
   min-height: 100vh;
-  background: linear-gradient(
-    135deg,
-    var(--color-bg) 0%,
-    var(--color-bg-elevated) 50%,
-    var(--color-bg) 100%
-  );
+  background: radial-gradient(ellipse at top, #1a0808 0%, #050505 60%, #050505 100%);
 }

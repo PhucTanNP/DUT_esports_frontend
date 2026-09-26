@@ -1,5 +1,6 @@
 /* ==========================================================
    STUDENT AUTH — Đăng ký/Đăng nhập sinh viên (MSSV)
+   Ferrari Motorsport Dark Theme
    ========================================================== */
 .sa-overlay {
   position: fixed;
@@ -9,18 +10,18 @@
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(4, 6, 20, 0.85);
-  backdrop-filter: blur(6px);
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(8px);
   overflow-y: auto;
 }
 
 .sa-card {
   width: 100%;
   max-width: 440px;
-  background: var(--color-surface, #12163a);
-  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
-  border-radius: var(--radius-lg, 16px);
-  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.5));
+  background: #111111;
+  border: 1px solid rgba(225, 6, 0, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
   padding: 28px;
   position: relative;
   animation: sa-pop 0.25s ease;
@@ -51,13 +52,15 @@
 
 .sa-header h2 {
   font-size: var(--font-size-lg, 20px);
-  letter-spacing: 0.5px;
-  color: var(--color-text, #fff);
+  letter-spacing: 2px;
+  color: #ffffff;
+  text-transform: uppercase;
+  font-weight: 700;
 }
 
 .sa-header p {
   font-size: var(--font-size-xs, 12px);
-  color: var(--color-text-muted, #7a7f9e);
+  color: #737373;
   margin-top: 2px;
 }
 
@@ -68,29 +71,29 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
-  background: var(--color-bg-elevated, #1a1a3e);
-  color: var(--color-text, #fff);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: #161616;
+  color: #ffffff;
   font-size: 15px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 5;
-  transition: background var(--transition-fast, 150ms ease), transform var(--transition-fast, 150ms ease);
+  transition: background var(--transition-fast, 150ms ease), transform var(--transition-fast, 150ms ease), border-color var(--transition-fast, 150ms ease);
 }
 
 .sa-close:hover {
-  background: var(--color-danger, #ef4444);
-  border-color: var(--color-danger, #ef4444);
+  background: rgba(225, 6, 0, 0.2);
+  border-color: rgba(225, 6, 0, 0.5);
   transform: scale(1.08);
 }
 
 /* ---------- Tabs ---------- */
 .sa-tabs {
   display: flex;
-  background: var(--color-bg, #0a0e27);
-  border-radius: var(--radius-md, 10px);
+  background: #050505;
+  border-radius: 4px;
   padding: 4px;
   margin-bottom: 20px;
 }
@@ -99,9 +102,9 @@
   flex: 1;
   padding: 10px;
   border: none;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 3px;
   background: transparent;
-  color: var(--color-text-secondary, #b0b0b0);
+  color: #a3a3a3;
   font-weight: 600;
   font-size: var(--font-size-sm, 14px);
   cursor: pointer;
@@ -109,9 +112,9 @@
 }
 
 .sa-tab.active {
-  background: var(--color-primary, #ff6b00);
+  background: #e10600;
   color: #fff;
-  box-shadow: var(--shadow-glow, 0 0 24px rgba(255, 107, 0, 0.35));
+  box-shadow: 0 0 20px rgba(225, 6, 0, 0.3);
 }
 
 .sa-register-types {
@@ -122,18 +125,18 @@
 .sa-type {
   flex: 1;
   padding: 10px 12px;
-  border-radius: var(--radius-sm, 6px);
-  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
+  border-radius: 3px;
+  border: 1px solid rgba(225, 6, 0, 0.2);
   background: rgba(255, 255, 255, 0.02);
-  color: var(--color-text-secondary, #b0b0b0);
+  color: #a3a3a3;
   font-weight: 700;
   cursor: pointer;
   transition: all var(--transition-fast, 150ms ease);
 }
 
 .sa-type.active {
-  background: rgba(255, 107, 0, 0.16);
-  border-color: var(--color-primary, #ff6b00);
+  background: rgba(225, 6, 0, 0.12);
+  border-color: #e10600;
   color: #fff;
 }
 
@@ -158,29 +161,29 @@
 .sa-field label {
   font-size: var(--font-size-sm, 14px);
   font-weight: 600;
-  color: var(--color-text, #fff);
+  color: #a3a3a3;
 }
 
 .sa-field input {
   width: 100%;
   padding: 11px 14px;
-  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
-  border-radius: var(--radius-sm, 6px);
-  background: var(--color-bg, #0a0e27);
-  color: var(--color-text, #fff);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  background: #050505;
+  color: #ffffff;
   font-size: var(--font-size-sm, 14px);
   transition: border-color var(--transition-fast, 150ms ease);
 }
 
 .sa-field input:focus {
   outline: none;
-  border-color: var(--color-primary, #ff6b00);
-  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(255, 107, 0, 0.35));
+  border-color: #e10600;
+  box-shadow: 0 0 0 3px rgba(225, 6, 0, 0.2);
 }
 
 .sa-field small {
   font-size: var(--font-size-xs, 12px);
-  color: var(--color-text-muted, #7a7f9e);
+  color: #737373;
 }
 
 .sa-field input[readonly] {
@@ -191,25 +194,25 @@
 .sa-select {
   width: 100%;
   padding: 11px 38px 11px 14px;
-  border: 1px solid var(--color-border, rgba(255, 107, 0, 0.2));
-  border-radius: var(--radius-sm, 6px);
-  background: var(--color-bg, #0a0e27);
-  color: var(--color-text, #fff);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  background: #050505;
+  color: #ffffff;
   font-size: var(--font-size-sm, 14px);
   font-family: inherit;
   cursor: pointer;
   transition: border-color var(--transition-fast, 150ms ease);
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23ff6b00' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%23e10600' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 14px center;
 }
 
 .sa-select:focus {
   outline: none;
-  border-color: var(--color-primary, #ff6b00);
-  box-shadow: 0 0 0 3px var(--color-primary-glow, rgba(255, 107, 0, 0.35));
+  border-color: #e10600;
+  box-shadow: 0 0 0 3px rgba(225, 6, 0, 0.2);
 }
 
 .sa-select:disabled {
@@ -218,8 +221,8 @@
 }
 
 .sa-select option {
-  background: var(--color-surface, #12163a);
-  color: var(--color-text, #fff);
+  background: #111111;
+  color: #ffffff;
   padding: 8px;
 }
 
@@ -259,18 +262,18 @@
   border: 1px solid rgba(16, 185, 129, 0.5);
   color: #6ee7b7;
   padding: 12px 14px;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 4px;
   font-size: var(--font-size-sm, 14px);
   line-height: 1.5;
   animation: sa-pop 0.3s ease;
 }
 
 .sa-error {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  color: #fca5a5;
+  background: rgba(225, 6, 0, 0.1);
+  border: 1px solid rgba(225, 6, 0, 0.4);
+  color: #ff8080;
   padding: 10px 14px;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 4px;
   font-size: var(--font-size-sm, 14px);
 }
 
@@ -279,18 +282,25 @@
   margin-top: 6px;
   padding: 13px;
   border: none;
-  border-radius: var(--radius-sm, 6px);
-  background: linear-gradient(135deg, var(--color-primary, #ff6b00), var(--color-primary-dark, #e05e00));
+  border-radius: 4px;
+  background: #e10600;
   color: #fff;
   font-size: var(--font-size-md, 16px);
   font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: transform var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease);
+  transition: transform var(--transition-fast, 150ms ease), box-shadow var(--transition-fast, 150ms ease), background var(--transition-fast, 150ms ease);
 }
 
 .sa-submit:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-glow, 0 0 24px rgba(255, 107, 0, 0.35));
+  background: #b80500;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(225, 6, 0, 0.4);
+}
+
+.sa-submit:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 .sa-submit:disabled {
@@ -303,13 +313,13 @@
   text-align: center;
   margin-top: 16px;
   font-size: var(--font-size-sm, 14px);
-  color: var(--color-text-secondary, #b0b0b0);
+  color: #a3a3a3;
 }
 
 .sa-link {
   background: none;
   border: none;
-  color: var(--color-primary, #ff6b00);
+  color: #e10600;
   font-weight: 700;
   cursor: pointer;
   padding: 0 2px;

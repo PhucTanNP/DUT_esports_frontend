@@ -115,6 +115,10 @@ export const participantAPI = {
 
   /** 3. [SV-03] Lấy hồ sơ tài khoản hiện tại */
   async getMyProfile(): Promise<ApiResponse<ParticipantRow>> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (!token) {
+      return { success: false, message: 'Chưa đăng nhập' };
+    }
     const res = await apiRequest<ParticipantRow>('/auth/participant/me', { headers: getAuthHeader() });
     if (res.success && res.data) {
       localStorage.setItem('student_user', JSON.stringify(res.data));

@@ -1,20 +1,20 @@
 /* ============================================================
-   FOOTER STYLES — E-Sports Đà Nẵng
+   FOOTER STYLES — Ferrari Motorsport Theme
    ============================================================ */
 
 .footer {
-  background: linear-gradient(180deg, rgba(10, 10, 30, 0.98) 0%, #05050f 100%);
-  color: #ccc;
+  background: linear-gradient(180deg, rgba(5, 5, 5, 0.98) 0%, #000000 100%);
+  color: #a3a3a3;
   font-family: 'Inter', 'Segoe UI', sans-serif;
   margin-top: auto;
-  border-top: 1px solid rgba(255, 107, 0, 0.15);
+  border-top: 1px solid rgba(225, 6, 0, 0.15);
 }
 
-/* Glowing top line */
+/* Glowing top line — Ferrari red */
 .footer-glow-line {
   height: 2px;
-  background: linear-gradient(90deg, transparent 0%, #FF6B00 30%, #FF9A3C 50%, #FF6B00 70%, transparent 100%);
-  box-shadow: 0 0 18px 3px rgba(255, 107, 0, 0.55);
+  background: linear-gradient(90deg, transparent 0%, #e10600 30%, #c90500 50%, #e10600 70%, transparent 100%);
+  box-shadow: 0 0 18px 3px rgba(225, 6, 0, 0.55);
 }
 
 /* Main content grid */
@@ -33,13 +33,13 @@
   width: auto;
   object-fit: contain;
   margin-bottom: 18px;
-  filter: drop-shadow(0 0 8px rgba(255, 107, 0, 0.35));
+  filter: drop-shadow(0 0 8px rgba(225, 6, 0, 0.4));
 }
 
 .footer-brand-desc {
   font-size: 13.5px;
   line-height: 1.75;
-  color: #8888aa;
+  color: #737373;
   margin: 0 0 24px 0;
   max-width: 280px;
 }
@@ -56,10 +56,10 @@
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 8px;
-  background: rgba(255, 107, 0, 0.08);
-  border: 1px solid rgba(255, 107, 0, 0.25);
-  color: #FF6B00;
+  border-radius: 4px;
+  background: rgba(225, 6, 0, 0.08);
+  border: 1px solid rgba(225, 6, 0, 0.25);
+  color: #e10600;
   text-decoration: none;
   transition: all 0.25s ease;
 }
@@ -70,10 +70,10 @@
 }
 
 .social-btn:hover {
-  background: #FF6B00;
+  background: #e10600;
   color: #fff;
-  border-color: #FF6B00;
-  box-shadow: 0 0 16px rgba(255, 107, 0, 0.45);
+  border-color: #e10600;
+  box-shadow: 0 0 16px rgba(225, 6, 0, 0.5);
   transform: translateY(-2px);
 }
 
@@ -89,10 +89,10 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #FF6B00;
+  color: #e10600;
   margin: 0;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 107, 0, 0.2);
+  border-bottom: 1px solid rgba(225, 6, 0, 0.2);
 }
 
 .footer-links {
@@ -105,7 +105,7 @@
 }
 
 .footer-links a {
-  color: #8888aa;
+  color: #737373;
   text-decoration: none;
   font-size: 13.5px;
   transition: color 0.2s ease, padding-left 0.2s ease;
@@ -113,7 +113,7 @@
 }
 
 .footer-links a:hover {
-  color: #FF6B00;
+  color: #e10600;
   padding-left: 6px;
 }
 
@@ -132,7 +132,7 @@
   align-items: flex-start;
   gap: 10px;
   font-size: 13.5px;
-  color: #8888aa;
+  color: #737373;
   line-height: 1.5;
 }
 
@@ -144,7 +144,7 @@
 
 /* ----- Bottom copyright bar ----- */
 .footer-bottom {
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
   background: rgba(0, 0, 0, 0.35);
 }
 
@@ -161,12 +161,12 @@
 
 .footer-copy {
   font-size: 13px;
-  color: #55556a;
+  color: #525252;
   margin: 0;
 }
 
 .copy-brand {
-  color: #FF6B00;
+  color: #e10600;
   font-weight: 600;
 }
 
@@ -178,17 +178,17 @@
 
 .footer-bottom-links a {
   font-size: 12.5px;
-  color: #55556a;
+  color: #525252;
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .footer-bottom-links a:hover {
-  color: #FF6B00;
+  color: #e10600;
 }
 
 .separator {
-  color: #33334a;
+  color: #262626;
   font-size: 12px;
 }
 

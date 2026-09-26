@@ -2,6 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { participantAPI, UNIVERSITIES, type ParticipantRow } from '../services/participant.service';
+import { getAuthenticatedImageUrl } from '../services/http';
 import '../styles/StudentRegistrationForm.css';
 
 interface StudentRejectedResubmitProps {
@@ -264,7 +265,7 @@ export default function StudentRejectedResubmit({ user, onResubmitSuccess }: Stu
                 <>
                   <div className="srf-preview-wrapper">
                     <img
-                      src={studentCardPreview || studentCardUrl}
+                      src={studentCardPreview || getAuthenticatedImageUrl(studentCardUrl)}
                       alt="Ảnh thẻ SV"
                       className="srf-preview-img"
                     />
@@ -293,7 +294,7 @@ export default function StudentRejectedResubmit({ user, onResubmitSuccess }: Stu
                 <>
                   <div className="srf-preview-wrapper">
                     <img
-                      src={selfiePreview || selfieUrl}
+                      src={selfiePreview || getAuthenticatedImageUrl(selfieUrl)}
                       alt="Ảnh selfie cầm thẻ"
                       className="srf-preview-img"
                     />

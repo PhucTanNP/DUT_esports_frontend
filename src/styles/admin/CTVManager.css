@@ -1,5 +1,6 @@
 /* =============================================================================
    DUT ESPORTS - CTV MANAGER & SHARED TABLE HIGH-CONTRAST STYLES
+   Ferrari Motorsport Dark Theme
    ============================================================================= */
 
 .ctv-manager {
@@ -9,9 +10,9 @@
 
 /* ===== TABLE ===== */
 .table-container {
-  background: #1E293B;
-  border: 1px solid #334155;
-  border-radius: 16px;
+  background: #111111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
@@ -22,8 +23,8 @@
 }
 
 .data-table thead {
-  background: #111827;
-  border-bottom: 2px solid #334155;
+  background: #0d0d0d;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.08);
 }
 
 .data-table th {
@@ -31,14 +32,14 @@
   text-align: left;
   font-size: 12px;
   font-weight: 800;
-  color: #F1F5F9;
+  color: #e2e2e2;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   white-space: nowrap;
 }
 
 .data-table tbody tr {
-  border-bottom: 1px solid #334155;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   transition: background 0.15s ease;
 }
 
@@ -47,7 +48,7 @@
 }
 
 .data-table tbody tr:hover {
-  background: #283548;
+  background: rgba(225, 6, 0, 0.06);
 }
 
 .data-table td {
@@ -60,7 +61,7 @@
 
 .empty-row {
   text-align: center;
-  color: #94A3B8 !important;
+  color: #737373 !important;
   font-style: italic;
   padding: 48px !important;
   font-size: 15px;
@@ -76,8 +77,8 @@
 .ctv-avatar {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #FF6B00, #FF8C00);
+  border-radius: 4px;
+  background: linear-gradient(135deg, #e10600, #b80500);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -85,7 +86,7 @@
   font-size: 16px;
   color: #FFFFFF;
   flex-shrink: 0;
-  box-shadow: 0 4px 12px rgba(255, 107, 0, 0.35);
+  box-shadow: 0 4px 12px rgba(225, 6, 0, 0.35);
 }
 
 .ctv-name {
@@ -103,7 +104,7 @@
 
 .contact-cell span {
   font-size: 13px;
-  color: #CBD5E1;
+  color: #a3a3a3;
   font-weight: 500;
 }
 
@@ -138,12 +139,12 @@
 }
 
 .btn-icon {
-  background: #334155;
-  border: 1px solid #475569;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   color: #F8FAFC;
   width: 34px;
   height: 34px;
-  border-radius: 8px;
+  border-radius: 3px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -153,15 +154,15 @@
 }
 
 .btn-icon:hover {
-  background: #475569;
+  background: rgba(255, 255, 255, 0.14);
   color: #FFFFFF;
   transform: translateY(-1px);
 }
 
 .btn-icon.edit:hover {
-  background: rgba(56, 189, 248, 0.2);
-  border-color: #38BDF8;
-  color: #38BDF8;
+  background: rgba(225, 6, 0, 0.15);
+  border-color: #e10600;
+  color: #e10600;
 }
 
 .btn-icon.delete:hover {
@@ -172,7 +173,7 @@
 
 .btn-toggle-status {
   padding: 6px 12px;
-  border-radius: 6px;
+  border-radius: 3px;
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;

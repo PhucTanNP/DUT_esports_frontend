@@ -162,37 +162,104 @@
   box-shadow: 0 8px 24px rgba(102, 126, 234, 0.15);
 }
 
-.tournament-card .card-header {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  background: #f9f9f9;
-  border-bottom: 1px solid #f0f0f0;
+.tournament-card.is-ended {
+  opacity: 0.92;
+  border-color: #e2e8f0;
 }
 
-.game-logo {
-  width: 50px;
-  height: 50px;
-  border-radius: 8px;
+.tournament-card.is-cancelled {
+  border-color: #fca5a5;
+}
+
+/* Khung Banner Truyền Thông 16:9 */
+.tournament-card .card-media-banner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #1e293b;
+  overflow: hidden;
+}
+
+.tournament-card .banner-image-preview {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  background: #e0e0e0;
+  transition: transform 0.4s ease;
 }
 
-.card-title {
-  flex: 1;
+.tournament-card:hover .banner-image-preview {
+  transform: scale(1.04);
 }
 
-.card-title h3 {
-  margin: 0 0 4px 0;
-  font-size: 16px;
-  color: #333;
-  font-weight: 600;
+.tournament-card .banner-media-fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  color: #94a3b8;
+  gap: 4px;
+  padding: 16px;
+  text-align: center;
 }
 
-.game-name {
-  margin: 0;
-  font-size: 12px;
-  color: #999;
+.tournament-card .banner-overlay-top {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.tournament-card .banner-game-badge {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tournament-card .banner-stage-badge {
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.tournament-card .banner-overlay-bottom {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  pointer-events: none;
+}
+
+.tournament-card .banner-code-badge {
+  background: rgba(0, 0, 0, 0.8);
+  color: #38bdf8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.card-tournament-title {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .card-body {
@@ -202,7 +269,7 @@
 .info-row {
   display: flex;
   justify-content: space-between;
-  padding: 8px 0;
+  padding: 6px 0;
   font-size: 13px;
   border-bottom: 1px solid #f5f5f5;
 }
@@ -211,8 +278,19 @@
   border-bottom: none;
 }
 
+.info-row.ended-info-row span:last-child {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.ended-indicator {
+  color: #ef4444;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .label {
-  color: #666;
+  color: #64748b;
   font-weight: 500;
 }
 
@@ -225,60 +303,105 @@
 }
 
 .card-actions {
-  padding: 16px;
+  padding: 14px 16px;
   border-top: 1px solid #f0f0f0;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.primary-actions-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
 }
 
 .btn-action {
-  flex: 1;
-  padding: 10px;
+  padding: 8px 6px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
 }
 
+/* Nút Chi tiết */
+.btn-detail {
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+}
+
+.btn-detail:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+}
+
+/* Nút Hủy */
+.btn-cancel {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+}
+
+/* Nút Chỉnh sửa */
 .btn-edit {
-  background: #e3f2fd;
-  color: #1976d2;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #ffffff;
 }
 
-.btn-edit:hover {
-  background: #bbdefb;
+.btn-edit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
 }
 
-.btn-delete {
-  background: #ffebee;
-  color: #c62828;
+/* Trạng thái VÔ HIỆU HÓA: Sau ngày kết thúc giải hoặc đã hủy */
+.btn-action:disabled,
+.btn-action.is-disabled {
+  background: #f1f5f9 !important;
+  color: #94a3b8 !important;
+  border: 1px solid #cbd5e1 !important;
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
-.btn-delete:hover {
-  background: #ffcdd2;
-}
-
-.approved-info {
-  display: block;
-  text-align: center;
-  padding: 10px;
-  background: #f0fff4;
-  color: #22863a;
+/* Nút Lối Tắt Quản Lý BTC */
+.btn-sub-org {
+  width: 100%;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-/* ===== MODAL ===== */
-.modal-overlay {
+.btn-sub-org:hover {
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #0284c7;
+}
+
+/* ===== MODAL (SCOPED TO CTV MANAGER) ===== */
+.ctv-tournament-manager .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,14 +415,14 @@
   to { opacity: 1; }
 }
 
-.modal {
-  background: white;
+.ctv-tournament-manager .modal {
+  background: #ffffff;
   border-radius: 12px;
-  max-width: 600px;
+  max-width: 650px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
   animation: slideUp 0.3s ease;
 }
 
@@ -314,34 +437,36 @@
   }
 }
 
-.modal-header {
+.ctv-tournament-manager .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
 
-.modal-header h3 {
+.ctv-tournament-manager .modal-header h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: #1e293b;
+  font-weight: 700;
 }
 
-.close-btn {
+.ctv-tournament-manager .close-btn {
   background: none;
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #999;
+  color: #64748b;
   transition: color 0.2s;
 }
 
-.close-btn:hover {
-  color: #333;
+.ctv-tournament-manager .close-btn:hover {
+  color: #0f172a;
 }
 
-.modal-form {
+.ctv-tournament-manager .modal-form {
   padding: 20px;
 }
 
@@ -515,3 +640,327 @@
     font-size: 15px;
   }
 }
+
+/* =============================================================================
+   TAB BAN TỔ CHỨC — CTV TOURNAMENT MANAGER
+   ============================================================================= */
+.ctv-main-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #edf2f7;
+  margin-bottom: 20px;
+  padding-bottom: 2px;
+}
+
+.ctv-main-tab-btn {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #718096;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctv-main-tab-btn:hover {
+  color: #2b6cb0;
+}
+
+.ctv-main-tab-btn.active {
+  color: #2b6cb0;
+  border-bottom-color: #3182ce;
+}
+
+.ctv-org-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ctv-org-select-box {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.ctv-org-select-box label {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 14px;
+}
+
+.ctv-org-select {
+  padding: 8px 14px;
+  border: 2px solid #cbd5e0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2d3748;
+  min-width: 280px;
+  outline: none;
+}
+
+.ctv-org-select:focus {
+  border-color: #3182ce;
+}
+
+/* Form Thêm BTC */
+.ctv-org-add-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ctv-org-add-card h4 {
+  margin: 0 0 16px 0;
+  color: #2d3748;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ctv-org-type-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  background: #edf2f7;
+  padding: 4px;
+  border-radius: 8px;
+  width: fit-content;
+}
+
+.ctv-org-type-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ctv-org-type-btn.active {
+  background: #3182ce;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(49, 130, 206, 0.3);
+}
+
+.ctv-org-form-grid {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 2fr auto;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+@media (max-width: 900px) {
+  .ctv-org-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ctv-org-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: relative;
+}
+
+.ctv-org-input-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.ctv-org-input,
+.ctv-org-select-input {
+  padding: 8px 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+
+.ctv-org-input:focus,
+.ctv-org-select-input:focus {
+  border-color: #3182ce;
+}
+
+.ctv-org-candidates-popup {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 50;
+}
+
+.ctv-org-candidate-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #edf2f7;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.ctv-org-candidate-item:hover {
+  background: #ebf8ff;
+}
+
+.ctv-btn-add-org {
+  background: linear-gradient(135deg, #3182ce 0%, #2b6cb0 100%);
+  color: #ffffff;
+  border: none;
+  padding: 9px 18px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  height: 38px;
+}
+
+.ctv-btn-add-org:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Bảng danh sách BTC */
+.ctv-org-table-wrapper {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow-x: auto;
+}
+
+.ctv-org-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+
+.ctv-org-table th {
+  background: #f7fafc;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #4a5568;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ctv-org-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #edf2f7;
+  vertical-align: middle;
+}
+
+.ctv-org-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.ctv-org-badge.permanent {
+  background: #ebf8ff;
+  color: #2b6cb0;
+}
+
+.ctv-org-badge.seasonal {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.ctv-btn-del-org {
+  background: #fff5f5;
+  border: 1px solid #feb2b2;
+  color: #e53e3e;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.ctv-btn-del-org:hover {
+  background: #fed7d7;
+}
+
+/* ===== 3-COL LOCATION FIELDS IN MODAL ===== */
+.location-fields-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.location-box-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #2b6cb0;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.location-row-3col {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+@media (max-width: 768px) {
+  .location-row-3col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.location-preview-banner {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background: #edf2f7;
+  border-left: 3px solid #3182ce;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
+.location-preview-label {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+.location-preview-value {
+  color: #2b6cb0;
+  font-weight: 700;
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+

@@ -1,13 +1,32 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { API_ORIGIN, AVAILABLE_GAMES, getLogoUrl } from '../../config/constants';
 import { registrationAPI } from '../../services/registration.service';
 import { tournamentAPI } from '../../services/tournament.service';
-import type { FormField, Registration, Tournament, UserRole } from '../../types';
+import { organizerApi } from '../../features/tournaments/api/organizer-api';
+import { getAuthToken, getAuthenticatedImageUrl } from '../../services/http';
+import type { FormField, Registration, RegistrationMemberDetail, SafeUser, Tournament, TournamentParticipantListResponseDTO, UserRole } from '../../types';
 import { formatDateTime } from '../../utils/format';
+import { toDatetimeLocalValue, toISOStringFromLocal } from '../../utils/date';
 import { parseFormSchema, parseSubmittedData } from '../../utils/formSchema';
+import BannerCropModal from './BannerCropModal';
+import TournamentOrganizersTab from './TournamentOrganizersTab';
+import TournamentDetailModal from './TournamentDetailModal';
+import TournamentCancelModal from './TournamentCancelModal';
+import TournamentDetailView from './TournamentDetailView';
+import { getTournamentStage } from '../../utils/tournamentStage';
+import { AddressSelector } from '../ui';
+import {
+  DEFAULT_PROVINCE_CODE,
+  DEFAULT_WARD_CODE,
+  DEFAULT_PROVINCE_NAME,
+  DEFAULT_WARD_NAME,
+  formatAddress,
+  parseAddressString,
+} from '../../utils/address';
 import '../../styles/admin/TournamentManager.css';
 
 interface TournamentManagerProps {
@@ -21,6 +40,12 @@ interface TournamentForm {
   game_name: string;
   game_logo_url: string;
   banner_url: string;
+  location: string;
+  location_province?: string;
+  location_province_code?: string;
+  location_ward?: string;
+  location_ward_code?: string;
+  location_specific?: string;
   prize_pool: number;
   participation_type: 'individual' | 'team';
   max_participants: number;
@@ -50,6 +75,12 @@ const emptyForm: TournamentForm = {
   game_name: '',
   game_logo_url: '',
   banner_url: '',
+  location: '',
+  location_province: DEFAULT_PROVINCE_NAME,
+  location_province_code: DEFAULT_PROVINCE_CODE,
+  location_ward: DEFAULT_WARD_NAME,
+  location_ward_code: DEFAULT_WARD_CODE,
+  location_specific: '',
   prize_pool: 0,
   participation_type: 'individual',
   max_participants: 16,
@@ -65,7 +96,15 @@ const emptyForm: TournamentForm = {
   form_schema: [],
 };
 
+interface SeasonalSelection {
+  participant_id: string;
+  full_name: string;
+  student_id: string;
+  custom_title: string;
+}
+
 export default function TournamentManager({ userRole }: TournamentManagerProps) {
+  const router = useRouter();
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [pendingTournaments, setPendingTournaments] = useState<Tournament[]>([]);
   const [search, setSearch] = useState('');
@@ -81,15 +120,41 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [bannerUploading, setBannerUploading] = useState(false);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string>('');
+  const [cropFileName, setCropFileName] = useState<string>('banner.jpg');
+
+  // Organizers in modal state
+  const [candidateUsers, setCandidateUsers] = useState<SafeUser[]>([]);
+  const [selectedPermanentUserIds, setSelectedPermanentUserIds] = useState<string[]>([]);
+  const [seasonalSearchQuery, setSeasonalSearchQuery] = useState('');
+  const [seasonalCandidates, setSeasonalCandidates] = useState<SafeUser[]>([]);
+  const [seasonalTitleInput, setSeasonalTitleInput] = useState('CTV Điểm danh');
+  const [selectedSeasonalList, setSelectedSeasonalList] = useState<SeasonalSelection[]>([]);
 
   // Registrations modal state
   const [regModalTournament, setRegModalTournament] = useState<Tournament | null>(null);
+  const [orgModalTournament, setOrgModalTournament] = useState<Tournament | null>(null);
   const [selectedTournamentSchema, setSelectedTournamentSchema] = useState<FormField[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [regFilterStatus, setRegFilterStatus] = useState('all');
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState('');
   const [viewingReg, setViewingReg] = useState<Registration | null>(null);
+  const [viewingMemberDetail, setViewingMemberDetail] = useState<RegistrationMemberDetail | null>(null);
+  const [zoomImage, setZoomImage] = useState<{ url: string; title: string } | null>(null);
+
+  // Phase 9 Participant Management State
+  const [participantsData, setParticipantsData] = useState<TournamentParticipantListResponseDTO | null>(null);
+  const [activeRegSubTab, setActiveRegSubTab] = useState<'registrations' | 'participants'>('participants');
+  const [expandedTeamId, setExpandedTeamId] = useState<string | null>(null);
+
+  // Tournament Detail & Cancel Modal States
+  const [detailModalTournament, setDetailModalTournament] = useState<Tournament | null>(null);
+  const [viewingDetailTournamentId, setViewingDetailTournamentId] = useState<string | null>(null);
+  const [cancelModalTournament, setCancelModalTournament] = useState<Tournament | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   const fetchTournaments = async () => {
     try {
@@ -97,8 +162,9 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       setError('');
       const result = await tournamentAPI.getAll(search, filterStatus === 'all' ? '' : filterStatus);
       if (result.success) {
-        const approved = (result.data ?? []).filter((t) => t.status === 'approved');
-        setTournaments(approved);
+        // Lấy tất cả các giải không phải pending (vì pending nằm ở tab Chờ Duyệt)
+        const nonPending = (result.data ?? []).filter((t) => t.status !== 'pending');
+        setTournaments(nonPending);
       } else {
         setError(result.message || 'Không thể tải danh sách giải đấu');
       }
@@ -106,6 +172,26 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       setError('Lỗi kết nối: ' + (err as Error).message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelTournament = async () => {
+    if (!cancelModalTournament) return;
+    try {
+      setIsCancelling(true);
+      setError('');
+      const res = await tournamentAPI.cancel(cancelModalTournament.id);
+      if (res.success) {
+        setSuccess(`✅ Đã hủy giải đấu "${cancelModalTournament.name}" thành công!`);
+        setCancelModalTournament(null);
+        void fetchTournaments();
+      } else {
+        setError(res.message || 'Không thể hủy giải đấu');
+      }
+    } catch (err) {
+      setError('Lỗi kết nối khi hủy giải: ' + (err as Error).message);
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -134,10 +220,12 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     if (!file) return;
     setBannerUploading(true);
     try {
+      const token = getAuthToken();
       const fd = new FormData();
       fd.append('banner', file);
       const res = await fetch(`${API_ORIGIN}/api/upload/banner`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: fd,
       });
       const data = (await res.json()) as { success: boolean; url?: string; message?: string };
@@ -153,6 +241,23 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     }
   };
 
+  const onSelectBannerFile = (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('Vui lòng chọn file hình ảnh hợp lệ (JPG, PNG, WebP)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result) {
+        setCropImageSrc(reader.result as string);
+        setCropFileName(file.name);
+        setShowCropModal(true);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const filtered = tournaments.filter((t) => {
     const matchSearch =
       t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -161,27 +266,102 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     return matchSearch && matchStatus;
   });
 
+  // Tải danh sách CTV Thường Trực khi mở modal và nạp organizers hiện tại nếu sửa giải
+  useEffect(() => {
+    if (!showModal) return;
+
+    void (async () => {
+      try {
+        const res = await organizerApi.getCandidateUsers();
+        if (res.success && res.data) {
+          setCandidateUsers(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load candidate users:', err);
+      }
+    })();
+
+    if (editingId) {
+      void (async () => {
+        try {
+          const res = await organizerApi.getOrganizersByTournament(editingId);
+          if (res.success && res.data) {
+            const permIds: string[] = [];
+            const seasonals: SeasonalSelection[] = [];
+            res.data.forEach((org) => {
+              if (org.organizer_type === 'permanent' && org.user_id) {
+                permIds.push(org.user_id);
+              } else if (org.organizer_type === 'seasonal' && org.participant_id) {
+                seasonals.push({
+                  participant_id: org.participant_id,
+                  full_name: org.participant_name || 'Sinh viên',
+                  student_id: org.student_id || 'N/A',
+                  custom_title: org.custom_title || 'CTV Điểm danh',
+                });
+              }
+            });
+            setSelectedPermanentUserIds(permIds);
+            setSelectedSeasonalList(seasonals);
+          }
+        } catch (err) {
+          console.error('Failed to load existing organizers:', err);
+        }
+      })();
+    } else {
+      setSelectedPermanentUserIds([]);
+      setSelectedSeasonalList([]);
+    }
+  }, [showModal, editingId]);
+
+  // Tìm kiếm sinh viên CTV Thời vụ theo MSSV/Tên (debounce)
+  useEffect(() => {
+    if (!seasonalSearchQuery.trim()) {
+      setSeasonalCandidates([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await organizerApi.getCandidateParticipants(seasonalSearchQuery.trim());
+        if (res.success && res.data) {
+          setSeasonalCandidates(res.data);
+        }
+      } catch (err) {
+        console.error('Search seasonal candidate error:', err);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [seasonalSearchQuery]);
+
   const openAdd = () => {
     setForm(emptyForm);
     setEditingId(null);
+    setSelectedPermanentUserIds([]);
+    setSelectedSeasonalList([]);
     setShowModal(true);
   };
 
   const openEdit = (t: Tournament) => {
+    const locParsed = parseAddressString(t.location);
     setForm({
       name: t.name,
       game_name: t.game_name,
       game_logo_url: t.game_logo_url || '',
       banner_url: t.banner_url || '',
+      location: t.location || '',
+      location_province: locParsed.province_name,
+      location_province_code: locParsed.province_code,
+      location_ward: locParsed.ward_name,
+      location_ward_code: locParsed.ward_code,
+      location_specific: locParsed.detailed_address,
       prize_pool: t.prize_pool || 0,
       participation_type: t.participation_type,
       max_participants: t.max_participants,
       min_team_size: t.min_team_size || '',
       max_team_size: t.max_team_size || '',
-      registration_open_at: t.registration_open_at ? t.registration_open_at.slice(0, 16) : '',
-      registration_close_at: t.registration_close_at ? t.registration_close_at.slice(0, 16) : '',
-      start_at: t.start_at ? t.start_at.slice(0, 16) : '',
-      end_at: t.end_at ? t.end_at.slice(0, 16) : '',
+      registration_open_at: toDatetimeLocalValue(t.registration_open_at),
+      registration_close_at: toDatetimeLocalValue(t.registration_close_at),
+      start_at: toDatetimeLocalValue(t.start_at),
+      end_at: toDatetimeLocalValue(t.end_at),
       description: t.description || '',
       use_external_link: t.use_external_link || false,
       external_registration_url: t.external_registration_url || '',
@@ -217,8 +397,21 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
         }
       }
 
+      const fullLocation = formatAddress({
+        province_code: form.location_province_code,
+        ward_code: form.location_ward_code,
+        province_name: form.location_province,
+        ward_name: form.location_ward,
+        detailed_address: form.location_specific,
+      });
+
       const submitData = {
         ...form,
+        registration_open_at: toISOStringFromLocal(form.registration_open_at),
+        registration_close_at: toISOStringFromLocal(form.registration_close_at),
+        start_at: toISOStringFromLocal(form.start_at),
+        end_at: toISOStringFromLocal(form.end_at),
+        location: fullLocation || undefined,
         form_schema: form.form_schema || [],
         min_team_size: form.participation_type === 'team' ? Number(form.min_team_size) : null,
         max_team_size: form.participation_type === 'team' ? Number(form.max_team_size) : null,
@@ -233,6 +426,35 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
       }
 
       if (result.success) {
+        const tournamentId = editingId || result.data?.id;
+        if (tournamentId) {
+          // Tự động gán các CTV Thường trực đã chọn vào BTC giải
+          for (const uId of selectedPermanentUserIds) {
+            try {
+              await organizerApi.addOrganizer(tournamentId, {
+                organizer_type: 'permanent',
+                user_id: uId,
+                role: 'co_organizer',
+              });
+            } catch {
+              // Bỏ qua nếu đã tồn tại
+            }
+          }
+          // Tự động gán các CTV Thời vụ đã chọn vào BTC giải
+          for (const s of selectedSeasonalList) {
+            try {
+              await organizerApi.addOrganizer(tournamentId, {
+                organizer_type: 'seasonal',
+                participant_id: s.participant_id,
+                role: 'seasonal_staff',
+                custom_title: s.custom_title,
+              });
+            } catch {
+              // Bỏ qua nếu đã tồn tại
+            }
+          }
+        }
+
         setSuccess(result.message || 'Lưu thành công!');
         setShowModal(false);
         void fetchTournaments();
@@ -316,20 +538,58 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     setRegModalTournament(tournament);
     setRegFilterStatus('all');
     setRegistrations([]);
+    setParticipantsData(null);
+    setActiveRegSubTab('participants');
+    setExpandedTeamId(null);
     setRegError('');
     setSelectedTournamentSchema(parseFormSchema(tournament.form_schema));
     try {
       setRegLoading(true);
-      const result = await registrationAPI.getMyRegistrations(tournament.id, 'all');
-      if (result.success) {
-        setRegistrations(result.data || []);
+      const [regRes, partRes] = await Promise.all([
+        registrationAPI.getMyRegistrations(tournament.id, 'all'),
+        registrationAPI.getTournamentParticipants(tournament.id),
+      ]);
+      if (regRes.success) {
+        setRegistrations(regRes.data || []);
       } else {
-        setRegError(result.message || 'Không thể tải danh sách đăng ký');
+        setRegError(regRes.message || 'Không thể tải danh sách đăng ký');
+      }
+      if (partRes.success && partRes.data) {
+        setParticipantsData(partRes.data);
       }
     } catch (err) {
       setRegError('Lỗi kết nối: ' + (err as Error).message);
     } finally {
       setRegLoading(false);
+    }
+  };
+
+  const handleConfirmParticipation = async (
+    registrationId: string,
+    participantId: string,
+    currentStatus: string,
+  ) => {
+    if (!regModalTournament) return;
+    const action = currentStatus === 'approved' ? 'cancel' : 'confirm';
+    try {
+      const res = await registrationAPI.confirmParticipation(
+        regModalTournament.id,
+        registrationId,
+        participantId,
+        action,
+      );
+      if (res.success) {
+        setSuccess(action === 'confirm' ? '✅ Đã xác nhận điểm danh tham gia!' : '❌ Đã hủy xác nhận điểm danh!');
+        const partRes = await registrationAPI.getTournamentParticipants(regModalTournament.id);
+        if (partRes.success && partRes.data) {
+          setParticipantsData(partRes.data);
+        }
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setRegError(res.message || 'Thao tác thất bại');
+      }
+    } catch (err) {
+      setRegError('Lỗi: ' + (err as Error).message);
     }
   };
 
@@ -433,6 +693,17 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
     setTimeout(() => setSuccess(''), 4000);
   };
 
+  if (viewingDetailTournamentId) {
+    return (
+      <div className="tournament-manager">
+        <TournamentDetailView
+          tournamentId={viewingDetailTournamentId}
+          onBack={() => setViewingDetailTournamentId(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="tournament-manager">
       {error && (
@@ -479,9 +750,30 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                 className="filter-select"
               >
                 <option value="all">Tất cả trạng thái</option>
-                <option value="active">🟢 Hoạt động</option>
-                <option value="completed">✅ Hoàn thành</option>
+                <option value="active">🟢 Đang diễn ra / Hoạt động</option>
+                <option value="approved">✅ Đã duyệt</option>
+                <option value="completed">🏁 Hoàn thành</option>
+                <option value="cancelled">❌ Đã hủy</option>
               </select>
+
+              <div className="view-mode-toggle">
+                <button
+                  type="button"
+                  className={`btn-toggle-view ${viewMode === 'grid' ? 'active' : ''}`}
+                  onClick={() => setViewMode('grid')}
+                  title="Dạng Lưới Thẻ Banner 16:9"
+                >
+                  🔲 Thẻ Banner
+                </button>
+                <button
+                  type="button"
+                  className={`btn-toggle-view ${viewMode === 'table' ? 'active' : ''}`}
+                  onClick={() => setViewMode('table')}
+                  title="Dạng Bảng Danh Sách"
+                >
+                  📋 Bảng
+                </button>
+              </div>
             </div>
             <button onClick={openAdd} className="btn-add">
               ➕ Tạo Giải Đấu
@@ -497,42 +789,266 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                 ➕ Tạo giải đấu đầu tiên
               </button>
             </div>
+          ) : viewMode === 'grid' ? (
+            /* GIAO DIỆN LƯỚI THẺ BANNER 16:9 (ESPORTS CARDS) */
+            <div className="tournament-cards-grid">
+              {filtered.map((t) => {
+                const isEnded = Boolean(t.end_at && new Date() >= new Date(t.end_at));
+                const isCancelled = t.status === 'cancelled';
+                const isCompleted = t.status === 'completed';
+                const canMutate = !isEnded && !isCancelled && !isCompleted;
+                const stageInfo = getTournamentStage(t);
+
+                return (
+                  <div
+                    key={t.id}
+                    className={`tournament-media-card ${isEnded ? 'is-ended' : ''} ${isCancelled ? 'is-cancelled' : ''}`}
+                  >
+                    {/* Banner Truyền Thông 16:9 */}
+                    <div className="card-media-banner">
+                      {t.banner_url ? (
+                        <img
+                          src={t.banner_url}
+                          alt={t.name}
+                          className="banner-image-preview"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                            const fb = e.currentTarget.parentElement?.querySelector('.banner-media-fallback');
+                            if (fb) (fb as HTMLElement).style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="banner-media-fallback"
+                        style={{ display: t.banner_url ? 'none' : 'flex' }}
+                      >
+                        <span className="fallback-game-name">🎮 {t.game_name}</span>
+                        <span className="fallback-tour-name">{t.name}</span>
+                      </div>
+
+                      <div className="banner-overlay-top">
+                        <span className="banner-game-badge">🎮 {t.game_name}</span>
+                        <span
+                          className="banner-stage-badge"
+                          style={{ backgroundColor: stageInfo.badgeColor + 'e0' }}
+                        >
+                          {stageInfo.badgeText}
+                        </span>
+                      </div>
+
+                      <div className="banner-overlay-bottom">
+                        <code className="banner-code-badge">{t.code}</code>
+                      </div>
+                    </div>
+
+                    {/* Nội Dung Card */}
+                    <div className="card-media-body">
+                      <h3 className="card-media-title" title={t.name}>
+                        {t.name}
+                      </h3>
+
+                      <div className="card-meta-chips">
+                        <span className="meta-chip type-chip">
+                          {t.participation_type === 'team'
+                            ? `👥 Đội (${t.min_team_size || 1}-${t.max_team_size || 5} TV)`
+                            : '👤 Cá nhân'}
+                        </span>
+                        <span className="meta-chip slots-chip">
+                          🎯 {t.max_participants} {t.participation_type === 'team' ? 'đội' : 'người'}
+                        </span>
+                      </div>
+
+                      <div className="card-schedule-box">
+                        <div className="schedule-row">
+                          <span className="sch-label">Bắt đầu:</span>
+                          <span className="sch-val">{t.start_at ? formatDateTime(t.start_at) : '-'}</span>
+                        </div>
+                        <div className={`schedule-row ${isEnded ? 'ended-row' : ''}`}>
+                          <span className="sch-label">Kết thúc:</span>
+                          <span className="sch-val">
+                            {t.end_at ? formatDateTime(t.end_at) : '-'}
+                            {isEnded && <span className="ended-indicator"> (Hết hạn)</span>}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Bộ 3 Nút Hành Động Chuẩn Hoá: Chi tiết, Hủy, Chỉnh sửa */}
+                      <div className="card-primary-actions">
+                        <button
+                          type="button"
+                          className="btn-action-hub btn-action-detail"
+                          onClick={() => setViewingDetailTournamentId(t.id)}
+                          title="Xem chi tiết giải đấu trên Dashboard"
+                        >
+                          🔍 Chi tiết
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn-action-hub btn-action-cancel ${!canMutate ? 'is-disabled' : ''}`}
+                          disabled={!canMutate}
+                          onClick={() => setCancelModalTournament(t)}
+                          title={
+                            isEnded
+                              ? `Không thể hủy: Giải đấu đã qua ngày kết thúc (${formatDateTime(t.end_at)})`
+                              : isCancelled
+                                ? 'Giải đấu đã được hủy'
+                                : isCompleted
+                                  ? 'Giải đấu đã hoàn thành'
+                                  : 'Hủy giải đấu này'
+                          }
+                        >
+                          🚫 Hủy
+                        </button>
+
+                        <button
+                          type="button"
+                          className={`btn-action-hub btn-action-edit ${!canMutate ? 'is-disabled' : ''}`}
+                          disabled={!canMutate}
+                          onClick={() => openEdit(t)}
+                          title={
+                            isEnded
+                              ? `Không thể chỉnh sửa: Giải đấu đã qua ngày kết thúc (${formatDateTime(t.end_at)})`
+                              : isCancelled
+                                ? 'Không thể chỉnh sửa giải đấu đã bị hủy'
+                                : isCompleted
+                                  ? 'Không thể chỉnh sửa giải đấu đã hoàn thành'
+                                  : 'Chỉnh sửa thông tin giải đấu'
+                          }
+                        >
+                          ✏️ Chỉnh sửa
+                        </button>
+                      </div>
+
+                      {/* Lối Tắt Nhanh Ban Tổ Chức & Đăng Ký */}
+                      <div className="card-secondary-actions">
+                        <button
+                          type="button"
+                          className="btn-sub-action btn-sub-org"
+                          onClick={() => setOrgModalTournament(t)}
+                          title="Quản lý Ban Tổ Chức (CTV Thường trực & Thời vụ)"
+                        >
+                          🛡️ BTC
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-sub-action btn-sub-reg"
+                          onClick={() => void openRegModal(t)}
+                          title="Danh sách đăng ký & VĐV"
+                        >
+                          👥 Đăng ký
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           ) : (
+            /* GIAO DIỆN BẢNG DANH SÁCH CÓ BANNER THUMBNAIL */
             <div className="tournament-table">
               <table>
                 <thead>
                   <tr>
+                    <th>Banner</th>
                     <th>Mã</th>
                     <th>Tên Giải Đấu</th>
                     <th>Trò Chơi</th>
                     <th>Loại Tham Gia</th>
-                    <th>Quy Mô Max</th>
-                    <th>Ngày Bắt Đầu</th>
+                    <th>Ngày Kết Thúc</th>
                     <th>Hành Động</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((t) => (
-                    <tr key={t.id}>
-                      <td><code className="code-badge">{t.code}</code></td>
-                      <td className="name-cell">{t.name}</td>
-                      <td>{t.game_name}</td>
-                      <td>
-                        {t.participation_type === 'team' ? (
-                          <span className="type-tag team">👥 Đội ({t.min_team_size || 1}-{t.max_team_size || 5} TV)</span>
-                        ) : (
-                          <span className="type-tag individual">👤 Cá nhân</span>
-                        )}
-                      </td>
-                      <td>{t.max_participants} {t.participation_type === 'team' ? 'đội' : 'người'}</td>
-                      <td>{t.start_at ? formatDateTime(t.start_at) : '-'}</td>
-                      <td className="actions-cell">
-                        <button onClick={() => void openRegModal(t)} className="btn-icon reg-list" title="Danh sách đăng ký">👥</button>
-                        <button onClick={() => openEdit(t)} className="btn-icon edit" title="Chỉnh sửa">✏️</button>
-                        <button onClick={() => setDeleteConfirm(t.id)} className="btn-icon delete" title="Xóa">🗑️</button>
-                      </td>
-                    </tr>
-                  ))}
+                  {filtered.map((t) => {
+                    const isEnded = Boolean(t.end_at && new Date() >= new Date(t.end_at));
+                    const isCancelled = t.status === 'cancelled';
+                    const isCompleted = t.status === 'completed';
+                    const canMutate = !isEnded && !isCancelled && !isCompleted;
+
+                    return (
+                      <tr key={t.id} className={isEnded ? 'row-ended' : ''}>
+                        {/* Thumbnail Banner 16:9 */}
+                        <td className="banner-thumb-cell">
+                          {t.banner_url ? (
+                            <img
+                              src={t.banner_url}
+                              alt={t.name}
+                              className="table-banner-thumb"
+                              onError={(e) => ((e.currentTarget as HTMLElement).style.display = 'none')}
+                            />
+                          ) : (
+                            <div className="table-banner-fallback">🎮 {t.game_name}</div>
+                          )}
+                        </td>
+                        <td><code className="code-badge">{t.code}</code></td>
+                        <td className="name-cell">
+                          <div className="tour-name-bold">{t.name}</div>
+                          {isEnded && <span className="badge-ended-tag">Đã kết thúc</span>}
+                          {isCancelled && <span className="badge-cancelled-tag">Đã hủy</span>}
+                        </td>
+                        <td>{t.game_name}</td>
+                        <td>
+                          {t.participation_type === 'team' ? (
+                            <span className="type-tag team">👥 Đội ({t.min_team_size || 1}-{t.max_team_size || 5} TV)</span>
+                          ) : (
+                            <span className="type-tag individual">👤 Cá nhân</span>
+                          )}
+                        </td>
+                        <td>
+                          <div className={isEnded ? 'ended-date-text' : ''}>
+                            {t.end_at ? formatDateTime(t.end_at) : '-'}
+                          </div>
+                        </td>
+                        <td className="actions-cell">
+                          <div className="table-action-btns">
+                            <button
+                              type="button"
+                              onClick={() => setViewingDetailTournamentId(t.id)}
+                              className="btn-action-hub btn-action-detail"
+                              title="Chi tiết giải đấu trên Dashboard"
+                            >
+                              🔍 Chi tiết
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!canMutate}
+                              onClick={() => setCancelModalTournament(t)}
+                              className={`btn-action-hub btn-action-cancel ${!canMutate ? 'is-disabled' : ''}`}
+                              title={
+                                isEnded
+                                  ? `Không thể hủy giải đấu đã qua ngày kết thúc (${formatDateTime(t.end_at)})`
+                                  : isCancelled
+                                    ? 'Giải đấu đã được hủy'
+                                    : isCompleted
+                                      ? 'Giải đấu đã hoàn thành'
+                                      : 'Hủy giải đấu'
+                              }
+                            >
+                              🚫 Hủy
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!canMutate}
+                              onClick={() => openEdit(t)}
+                              className={`btn-action-hub btn-action-edit ${!canMutate ? 'is-disabled' : ''}`}
+                              title={
+                                isEnded
+                                  ? `Không thể chỉnh sửa giải đấu đã qua ngày kết thúc (${formatDateTime(t.end_at)})`
+                                  : isCancelled
+                                    ? 'Không thể chỉnh sửa giải đấu đã bị hủy'
+                                    : isCompleted
+                                      ? 'Không thể chỉnh sửa giải đấu đã hoàn thành'
+                                      : 'Chỉnh sửa'
+                              }
+                            >
+                              ✏️ Chỉnh sửa
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -613,40 +1129,72 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
         </div>
       )}
 
-      {/* Registrations Slide Modal */}
+      {/* Registrations & Participant Management Slide Modal */}
       {regModalTournament && (
         <div className="reg-modal-overlay" onClick={() => setRegModalTournament(null)}>
           <div className="reg-slide-panel" onClick={(e) => e.stopPropagation()}>
             <div className="reg-panel-header">
               <div>
                 <h3>
-                  👥 Danh Sách Đăng Ký 
+                  👥 Quản Lý Thành Viên &amp; Đăng Ký
                   <span className="panel-type-badge">
                     {regModalTournament.participation_type === 'team' ? ' 👥 Giải Đội' : ' 👤 Giải Cá Nhân'}
                   </span>
                 </h3>
                 <p className="reg-panel-sub">{regModalTournament.name} • <code>{regModalTournament.code}</code></p>
               </div>
-              <div className="reg-panel-actions">
-                <select
-                  className="reg-status-filter"
-                  value={regFilterStatus}
-                  onChange={(e) => void handleRegStatusFilter(e.target.value)}
+              <div className="reg-panel-actions" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <button
+                  type="button"
+                  className="btn-export-excel"
+                  style={{ backgroundColor: '#2e7d32', color: '#ffffff', fontWeight: 'bold' }}
+                  onClick={() => void registrationAPI.downloadParticipantsExcel(regModalTournament.id, regModalTournament.code)}
+                  title="Tải file Excel báo cáo danh sách thành viên và điểm danh ngày thi đấu"
                 >
-                  <option value="all">Tất cả</option>
-                  <option value="pending">⏳ Chờ</option>
-                  <option value="approved">✅ Duyệt</option>
-                  <option value="rejected">❌ Từ chối</option>
-                </select>
-                <button className="btn-export-excel" onClick={exportToExcel} disabled={registrations.length === 0}>
-                  📊 Excel ({registrations.length})
+                  📥 Tải Excel Báo Cáo
                 </button>
                 <button className="reg-panel-close" onClick={() => setRegModalTournament(null)}>✕</button>
               </div>
             </div>
 
+            {/* Sub-tabs Navigation */}
+            <div style={{ display: 'flex', borderBottom: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', padding: '0 20px' }}>
+              <button
+                type="button"
+                style={{
+                  padding: '12px 20px',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: activeRegSubTab === 'participants' ? '3px solid #00f2fe' : '3px solid transparent',
+                  color: activeRegSubTab === 'participants' ? '#00f2fe' : '#aaa',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+                onClick={() => setActiveRegSubTab('participants')}
+              >
+                👥 Thành Viên &amp; Điểm Danh Ngày Đánh Giải ({participantsData?.teams?.length || participantsData?.individualParticipants?.length || 0})
+              </button>
+              <button
+                type="button"
+                style={{
+                  padding: '12px 20px',
+                  background: 'none',
+                  border: 'none',
+                  borderBottom: activeRegSubTab === 'registrations' ? '3px solid #00f2fe' : '3px solid transparent',
+                  color: activeRegSubTab === 'registrations' ? '#00f2fe' : '#aaa',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                }}
+                onClick={() => setActiveRegSubTab('registrations')}
+              >
+                📋 Đơn Đăng Ký ({registrations.length})
+              </button>
+            </div>
+
             {regError && (
-              <div className="alert alert-error" style={{ margin: '0 20px' }}>
+              <div className="alert alert-error" style={{ margin: '10px 20px' }}>
                 ⚠️ {regError}
                 <button onClick={() => setRegError('')}>✕</button>
               </div>
@@ -654,19 +1202,254 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
 
             <div className="reg-panel-body">
               {regLoading ? (
-                <div className="loading">⏳ Đang tải...</div>
-              ) : registrations.length === 0 ? (
-                <div className="reg-empty-hint">
-                  <div className="reg-empty-icon">📭</div>
-                  <p>Chưa có đăng ký nào</p>
+                <div className="loading">⏳ Đang tải dữ liệu...</div>
+              ) : activeRegSubTab === 'participants' ? (
+                /* TAB 1: QUẢN LÝ THÀNH VIÊN & XÁC NHẬN ĐIỂM DANH NGÀY ĐÁNH GIẢI */
+                <div className="participants-management-view" style={{ padding: '10px 0' }}>
+                  {regModalTournament.participation_type === 'team' ? (
+                    /* GIẢI ĐỒNG ĐỘI */
+                    <div>
+                      {!participantsData?.teams || participantsData.teams.length === 0 ? (
+                        <div className="reg-empty-hint">
+                          <div className="reg-empty-icon">📭</div>
+                          <p>Chưa có đội nào được phê duyệt tham gia</p>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                          {participantsData.teams.map((team, tIdx) => {
+                            const isExpanded = expandedTeamId === team.registrationId;
+                            return (
+                              <div
+                                key={team.registrationId}
+                                style={{
+                                  background: 'rgba(255,255,255,0.03)',
+                                  border: '1px solid rgba(255,255,255,0.1)',
+                                  borderRadius: '8px',
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    padding: '12px 16px',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => setExpandedTeamId(isExpanded ? null : team.registrationId)}
+                                >
+                                  <div>
+                                    <div style={{ fontWeight: 'bold', fontSize: '16px', color: '#00f2fe' }}>
+                                      🚩 #{tIdx + 1} {team.teamName}
+                                    </div>
+                                    <div style={{ fontSize: '13px', color: '#aaa', marginTop: '2px' }}>
+                                      👑 Đội trưởng: <strong>{team.captainName}</strong> ({team.captainStudentId || 'N/A'}) • 👥 {team.totalMembers} thành viên
+                                    </div>
+                                  </div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span
+                                      style={{
+                                        padding: '4px 10px',
+                                        borderRadius: '12px',
+                                        fontSize: '12px',
+                                        fontWeight: 'bold',
+                                        backgroundColor: team.checkedInCount === team.totalMembers ? 'rgba(76, 175, 80, 0.2)' : 'rgba(255, 152, 0, 0.2)',
+                                        color: team.checkedInCount === team.totalMembers ? '#4caf50' : '#ff9800',
+                                        border: `1px solid ${team.checkedInCount === team.totalMembers ? '#4caf50' : '#ff9800'}`,
+                                      }}
+                                    >
+                                      Điểm danh: {team.checkedInCount}/{team.totalMembers}
+                                    </span>
+                                    <button
+                                      type="button"
+                                      className="btn-reg-view"
+                                      style={{ padding: '6px 12px', fontSize: '13px' }}
+                                    >
+                                      {isExpanded ? '🔼 Thu gọn' : '👁️ Xem danh sách thành viên'}
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {isExpanded && (
+                                  <div style={{ padding: '12px 16px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <table className="members-table" style={{ width: '100%' }}>
+                                      <thead>
+                                        <tr>
+                                          <th>#</th>
+                                          <th>Vai Trò</th>
+                                          <th>Họ và Tên</th>
+                                          <th>MSSV</th>
+                                          <th>Ingame ID</th>
+                                          <th>Lớp / Khoa</th>
+                                          <th>SĐT / Email</th>
+                                          <th>Điểm Danh Ngày Đánh Giải</th>
+                                          <th>Thao Tác Xác Nhận</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {team.members.map((m, mIdx) => (
+                                          <tr key={m.participantId} className={m.isCaptain ? 'captain-row' : ''}>
+                                            <td>{mIdx + 1}</td>
+                                            <td>
+                                              {m.isCaptain ? (
+                                                <span className="role-badge captain">👑 Đội trưởng</span>
+                                              ) : (
+                                                <span className="role-badge member">👤 Thành viên</span>
+                                              )}
+                                            </td>
+                                            <td className="font-bold">{m.fullName}</td>
+                                            <td><code>{m.studentId || '-'}</code></td>
+                                            <td><span style={{ color: '#00f2fe', fontWeight: 'bold' }}>{m.ingameId || '-'}</span></td>
+                                            <td>{`${m.className || '-'} • ${m.facultyName || '-'}`}</td>
+                                            <td style={{ fontSize: '12px' }}>
+                                              <div>{m.phoneNumber || '-'}</div>
+                                              <div style={{ color: '#888' }}>{m.email || '-'}</div>
+                                            </td>
+                                            <td>
+                                              {m.checkinStatus === 'approved' ? (
+                                                <span className="reg-status-badge reg-status-approved" style={{ backgroundColor: 'rgba(76, 175, 80, 0.2)', color: '#4caf50' }}>
+                                                  ✅ Đã điểm danh
+                                                </span>
+                                              ) : (
+                                                <span className="reg-status-badge reg-status-pending" style={{ backgroundColor: 'rgba(255, 152, 0, 0.2)', color: '#ff9800' }}>
+                                                  ⏳ Chưa điểm danh
+                                                </span>
+                                              )}
+                                            </td>
+                                            <td>
+                                              {m.checkinStatus === 'approved' ? (
+                                                <button
+                                                  type="button"
+                                                  className="btn-reg-reject"
+                                                  style={{ padding: '4px 10px', fontSize: '12px' }}
+                                                  onClick={() => void handleConfirmParticipation(team.registrationId, m.participantId, 'approved')}
+                                                  title="Hủy xác nhận điểm danh"
+                                                >
+                                                  ❌ Hủy xác nhận
+                                                </button>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  className="btn-reg-approve"
+                                                  style={{ padding: '4px 10px', fontSize: '12px' }}
+                                                  onClick={() => void handleConfirmParticipation(team.registrationId, m.participantId, 'not_checked_in')}
+                                                  title="Bấm nút xác nhận tham gia ngày thi đấu"
+                                                >
+                                                  ✅ Xác nhận tham gia
+                                                </button>
+                                              )}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* GIẢI CÁ NHÂN */
+                    <div>
+                      {!participantsData?.individualParticipants || participantsData.individualParticipants.length === 0 ? (
+                        <div className="reg-empty-hint">
+                          <div className="reg-empty-icon">📭</div>
+                          <p>Chưa có thí sinh nào được phê duyệt tham gia</p>
+                        </div>
+                      ) : (
+                        <div className="reg-table-wrapper">
+                          <table className="reg-table">
+                            <thead>
+                              <tr>
+                                <th>#</th>
+                                <th>Họ và Tên</th>
+                                <th>MSSV</th>
+                                <th>Ingame ID</th>
+                                <th>Lớp / Khoa</th>
+                                <th>Liên Hệ</th>
+                                <th>Điểm Danh Ngày Đánh Giải</th>
+                                <th>Thao Tác Xác Nhận</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {participantsData.individualParticipants.map((m, pIdx) => (
+                                <tr key={m.participantId}>
+                                  <td>{pIdx + 1}</td>
+                                  <td className="font-bold">👤 {m.fullName}</td>
+                                  <td><code>{m.studentId || '-'}</code></td>
+                                  <td><span style={{ color: '#00f2fe', fontWeight: 'bold' }}>{m.ingameId || '-'}</span></td>
+                                  <td>{`${m.className || '-'} • ${m.facultyName || '-'}`}</td>
+                                  <td style={{ fontSize: '12px' }}>
+                                    <div>{m.phoneNumber || '-'}</div>
+                                    <div style={{ color: '#888' }}>{m.email || '-'}</div>
+                                  </td>
+                                  <td>
+                                    {m.checkinStatus === 'approved' ? (
+                                      <span className="reg-status-badge reg-status-approved" style={{ backgroundColor: 'rgba(76, 175, 80, 0.2)', color: '#4caf50' }}>
+                                        ✅ Đã điểm danh
+                                      </span>
+                                    ) : (
+                                      <span className="reg-status-badge reg-status-pending" style={{ backgroundColor: 'rgba(255, 152, 0, 0.2)', color: '#ff9800' }}>
+                                        ⏳ Chưa điểm danh
+                                      </span>
+                                    )}
+                                  </td>
+                                  <td>
+                                    {m.checkinStatus === 'approved' ? (
+                                      <button
+                                        type="button"
+                                        className="btn-reg-reject"
+                                        style={{ padding: '4px 10px', fontSize: '12px' }}
+                                        onClick={() => void handleConfirmParticipation(m.registrationId || '', m.participantId, 'approved')}
+                                        title="Hủy xác nhận điểm danh"
+                                      >
+                                        ❌ Hủy xác nhận
+                                      </button>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="btn-reg-approve"
+                                        style={{ padding: '4px 10px', fontSize: '12px' }}
+                                        onClick={() => void handleConfirmParticipation(m.registrationId || '', m.participantId, 'not_checked_in')}
+                                        title="Bấm nút xác nhận tham gia ngày thi đấu"
+                                      >
+                                        ✅ Xác nhận tham gia
+                                      </button>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
+                /* TAB 2: QUẢN LÝ ĐƠN ĐĂNG KÝ (LEGACY REGISTRATIONS VIEW) */
                 <>
-                  <div className="reg-summary">
-                    <span>Tổng: <strong>{registrations.length}</strong></span>
-                    <span>✅ <strong className="text-green">{registrations.filter((r) => r.status === 'approved').length}</strong></span>
-                    <span>⏳ <strong className="text-yellow">{registrations.filter((r) => r.status === 'pending').length}</strong></span>
-                    <span>❌ <strong className="text-red">{registrations.filter((r) => r.status === 'rejected').length}</strong></span>
+                  <div className="reg-summary" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span>Tổng: <strong>{registrations.length}</strong></span>
+                      <span>✅ <strong className="text-green">{registrations.filter((r) => r.status === 'approved').length}</strong></span>
+                      <span>⏳ <strong className="text-yellow">{registrations.filter((r) => r.status === 'pending').length}</strong></span>
+                      <span>❌ <strong className="text-red">{registrations.filter((r) => r.status === 'rejected').length}</strong></span>
+                    </div>
+                    <select
+                      className="reg-status-filter"
+                      value={regFilterStatus}
+                      onChange={(e) => void handleRegStatusFilter(e.target.value)}
+                    >
+                      <option value="all">Tất cả đơn đăng ký</option>
+                      <option value="pending">⏳ Đơn chờ duyệt</option>
+                      <option value="approved">✅ Đơn đã duyệt</option>
+                      <option value="rejected">❌ Đơn bị từ chối</option>
+                    </select>
                   </div>
                   <div className="reg-table-wrapper">
                     <table className="reg-table">
@@ -795,31 +1578,45 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                           <th>#</th>
                           <th>Vai Trò</th>
                           <th>Họ và Tên</th>
-                          <th>Mã SV / Username</th>
-                          <th>Lớp</th>
-                          <th>Khoa</th>
+                          <th>MSSV / Username</th>
+                          <th>Trường</th>
+                          <th>Lớp / Khoa</th>
                           <th>Loại TK</th>
+                          <th>Thao Tác</th>
                         </tr>
                       </thead>
                       <tbody>
                         {viewingReg.members.map((m, idx) => (
-                          <tr key={m.participant_id || idx} className={m.is_captain ? 'captain-row' : ''}>
+                          <tr key={m.participant_id || m.participantId || idx} className={m.is_captain || m.isCaptain ? 'captain-row' : ''}>
                             <td>{idx + 1}</td>
                             <td>
-                              {m.is_captain ? (
+                              {m.is_captain || m.isCaptain ? (
                                 <span className="role-badge captain">👑 Đội trưởng</span>
                               ) : (
                                 <span className="role-badge member">👤 Thành viên</span>
                               )}
                             </td>
-                            <td className="font-bold">{m.full_name}</td>
-                            <td><code>{m.username}</code></td>
-                            <td>{m.class_name || '-'}</td>
-                            <td>{m.faculty_name || '-'}</td>
+                            <td className="font-bold">{m.full_name || m.fullName || '-'}</td>
+                            <td><code>{m.student_id || m.studentId || m.username || '-'}</code></td>
+                            <td>{m.university_name || m.universityName || 'ĐH Bách Khoa'}</td>
                             <td>
-                              <span className={`acc-type-tag ${m.account_type}`}>
-                                {m.account_type === 'dut' ? '🏫 DUT' : '🌐 Tự do'}
+                              {(m.class_name || m.className || '-') + ' • ' + (m.faculty_name || m.facultyName || '-')}
+                            </td>
+                            <td>
+                              <span className="acc-type-tag dut">
+                                🎓 Sinh viên
                               </span>
+                            </td>
+                            <td>
+                              <button
+                                type="button"
+                                className="btn-reg-view"
+                                onClick={() => setViewingMemberDetail(m)}
+                                title="Xem thông tin chi tiết sinh viên"
+                                style={{ padding: '4px 10px', fontSize: '12px' }}
+                              >
+                                🔍 Chi tiết
+                              </button>
                             </td>
                           </tr>
                         ))}
@@ -863,10 +1660,153 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
         </div>
       )}
 
+      {/* Student Personal Details & KYC Images Modal */}
+      {viewingMemberDetail && (
+        <div className="modal-overlay" onClick={() => setViewingMemberDetail(null)} style={{ zIndex: 1100 }}>
+          <div className="modal modal-student-detail" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '720px', width: '92%' }}>
+            <div className="modal-header">
+              <h3>🪪 Hồ Sơ Chi Tiết Sinh Viên</h3>
+              <button onClick={() => setViewingMemberDetail(null)} className="btn-close">✕</button>
+            </div>
+            <div className="reg-detail-content">
+              {/* Student Header Card */}
+              <div className="student-profile-header-card">
+                <div className="student-avatar-badge">🎓</div>
+                <div className="student-header-info">
+                  <h3 className="student-name">{viewingMemberDetail.full_name || viewingMemberDetail.fullName || 'N/A'}</h3>
+                  <div className="student-sub-info">
+                    <span>MSSV: <code>{viewingMemberDetail.student_id || viewingMemberDetail.studentId || viewingMemberDetail.username || 'N/A'}</code></span>
+                    <span className="bullet">•</span>
+                    <span className="student-uni">{viewingMemberDetail.university_name || viewingMemberDetail.universityName || 'Đại học Bách khoa - ĐHĐN'}</span>
+                  </div>
+                </div>
+                <div className="student-kyc-status">
+                  <span className={`reg-status-badge reg-status-${viewingMemberDetail.status || viewingMemberDetail.participant_status || 'approved'}`}>
+                    {(viewingMemberDetail.status || viewingMemberDetail.participant_status) === 'approved' ? '✅ KYC Đã duyệt'
+                      : (viewingMemberDetail.status || viewingMemberDetail.participant_status) === 'rejected' ? '❌ KYC Bị từ chối'
+                      : '⏳ KYC Chờ duyệt'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Detailed Info Grid */}
+              <div className="student-info-grid">
+                <div className="info-grid-item">
+                  <span className="info-label">🏫 Trường / Đơn vị</span>
+                  <span className="info-value">{viewingMemberDetail.university_name || viewingMemberDetail.universityName || 'Đại học Bách khoa - ĐHĐN'}</span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">📚 Khoa</span>
+                  <span className="info-value">{viewingMemberDetail.faculty_name || viewingMemberDetail.facultyName || '-'}</span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">🎓 Lớp</span>
+                  <span className="info-value">{viewingMemberDetail.class_name || viewingMemberDetail.className || '-'}</span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">📧 Email</span>
+                  <span className="info-value">{viewingMemberDetail.email || '-'}</span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">📞 Số điện thoại</span>
+                  <span className="info-value">{viewingMemberDetail.phone || viewingMemberDetail.phone_number || '-'}</span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">🎮 Ingame ID</span>
+                  <span className="info-value font-mono"><code>{viewingMemberDetail.ingame_id || viewingMemberDetail.ingameId || '-'}</code></span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">👑 Vai trò trong giải</span>
+                  <span className="info-value">
+                    {viewingMemberDetail.is_captain || viewingMemberDetail.isCaptain ? '👑 Đội trưởng' : '👤 Thành viên'} 
+                    {viewingMemberDetail.role_in_team || viewingMemberDetail.roleInTeam ? ` (${viewingMemberDetail.role_in_team || viewingMemberDetail.roleInTeam})` : ''}
+                  </span>
+                </div>
+                <div className="info-grid-item">
+                  <span className="info-label">🏷️ Loại tài khoản</span>
+                  <span className="info-value">🎓 Sinh viên</span>
+                </div>
+              </div>
+
+              {/* KYC Identity Verification Photos (Student Cards only - ZERO CCCD) */}
+              <div className="student-kyc-photos-section">
+                <h4 className="section-subtitle">🖼️ Ảnh Thẻ Sinh Viên &amp; Xác Thực KYC (Zero CCCD)</h4>
+                <div className="kyc-photos-grid">
+                  {/* Card 1: Student Card Front */}
+                  <div className="kyc-photo-card">
+                    <div className="kyc-photo-header">📌 Mặt trước Thẻ Sinh Viên</div>
+                    {(viewingMemberDetail.student_card_url || viewingMemberDetail.studentCardUrl) ? (
+                      <div 
+                        className="kyc-photo-wrapper"
+                        onClick={() => setZoomImage({ 
+                          url: (viewingMemberDetail.student_card_url || viewingMemberDetail.studentCardUrl)!, 
+                          title: `Mặt trước Thẻ SV - ${viewingMemberDetail.full_name || viewingMemberDetail.fullName}` 
+                        })}
+                      >
+                        <img 
+                          src={getAuthenticatedImageUrl(viewingMemberDetail.student_card_url || viewingMemberDetail.studentCardUrl)} 
+                          alt="Mặt trước thẻ sinh viên" 
+                          className="kyc-img"
+                        />
+                        <div className="kyc-photo-overlay">🔍 Click để phóng to</div>
+                      </div>
+                    ) : (
+                      <div className="kyc-photo-empty">Chưa tải lên ảnh thẻ SV</div>
+                    )}
+                  </div>
+
+                  {/* Card 2: Selfie with Student Card */}
+                  <div className="kyc-photo-card">
+                    <div className="kyc-photo-header">📸 Selfie cùng Thẻ Sinh Viên</div>
+                    {(viewingMemberDetail.selfie_with_student_card_url || viewingMemberDetail.selfieWithStudentCardUrl) ? (
+                      <div 
+                        className="kyc-photo-wrapper"
+                        onClick={() => setZoomImage({ 
+                          url: (viewingMemberDetail.selfie_with_student_card_url || viewingMemberDetail.selfieWithStudentCardUrl)!, 
+                          title: `Selfie cùng Thẻ SV - ${viewingMemberDetail.full_name || viewingMemberDetail.fullName}` 
+                        })}
+                      >
+                        <img 
+                          src={getAuthenticatedImageUrl(viewingMemberDetail.selfie_with_student_card_url || viewingMemberDetail.selfieWithStudentCardUrl)} 
+                          alt="Selfie cùng thẻ sinh viên" 
+                          className="kyc-img"
+                        />
+                        <div className="kyc-photo-overlay">🔍 Click để phóng to</div>
+                      </div>
+                    ) : (
+                      <div className="kyc-photo-empty">Chưa tải lên ảnh selfie cùng thẻ SV</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="modal-actions" style={{ justifyContent: 'flex-end', marginTop: '10px' }}>
+                <button className="btn-cancel" onClick={() => setViewingMemberDetail(null)}>Đóng</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Image Lightbox Zoom Modal */}
+      {zoomImage && (
+        <div className="modal-overlay" onClick={() => setZoomImage(null)} style={{ zIndex: 1200 }}>
+          <div className="lightbox-container" onClick={(e) => e.stopPropagation()}>
+            <div className="lightbox-header">
+              <h4>{zoomImage.title}</h4>
+              <button onClick={() => setZoomImage(null)} className="btn-close">✕</button>
+            </div>
+            <div className="lightbox-body">
+              <img src={getAuthenticatedImageUrl(zoomImage.url)} alt={zoomImage.title} className="lightbox-img" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Add/Edit Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => !editingId || setShowModal(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
+          <div className="modal tm-modal-dialog" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editingId ? '✏️ Sửa Giải Đấu' : '➕ Thêm Giải Đấu Mới'}</h3>
               <button onClick={() => setShowModal(false)} className="btn-close">✕</button>
@@ -971,40 +1911,80 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                 </div>
               )}
 
-              {/* Prize Pool */}
-              <div className="form-group">
-                <label>Tổng Tiền Thưởng 💰</label>
-                <input
-                  type="number"
-                  value={form.prize_pool}
-                  onChange={(e) => setForm({ ...form, prize_pool: Number(e.target.value) })}
-                  min="0"
-                  step="1000000"
-                  placeholder="VD: 7000000 (mặc định 0 nếu không nhập)"
-                />
-                <small>Nhập số tiền (VND). Nếu không nhập thì mặc định là 0đ</small>
-              </div>
+              {/* Module Địa Điểm 3 Cấp: Tỉnh/TP (34 tỉnh), Phường/Xã/Đặc khu (3.321 đơn vị), Địa chỉ cụ thể */}
+              <AddressSelector
+                value={{
+                  province_code: form.location_province_code || DEFAULT_PROVINCE_CODE,
+                  ward_code: form.location_ward_code || DEFAULT_WARD_CODE,
+                  detailed_address: form.location_specific || '',
+                  province_name: form.location_province,
+                  ward_name: form.location_ward,
+                }}
+                onChange={(addr) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    location_province_code: addr.province_code,
+                    location_ward_code: addr.ward_code,
+                    location_province: addr.province_name,
+                    location_ward: addr.ward_name,
+                    location_specific: addr.detailed_address,
+                    location: addr.formatted_address || '',
+                  }));
+                }}
+                required
+                title="📍 Địa Điểm Tổ Chức Thi Đấu"
+              />
 
-              {/* Banner Upload */}
+              {/* Banner Upload with Dimension Requirements & Cropper */}
               <div className="form-group">
-                <label>📸 Ảnh Truyền Thông (Banner) *</label>
+                <div className="banner-label-row">
+                  <label>📸 Ảnh Truyền Thông (Banner) *</label>
+                  <span className="banner-size-requirement">
+                    📐 Chuẩn 16:9 (1920 × 1080 px hoặc tối thiểu 1280 × 720 px)
+                  </span>
+                </div>
                 <div
                   className={`banner-upload-zone ${bannerUploading ? 'uploading' : ''}`}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => {
                     e.preventDefault();
-                    void handleBannerUpload(e.dataTransfer.files[0]);
+                    onSelectBannerFile(e.dataTransfer.files[0]);
                   }}
                 >
                   {form.banner_url ? (
                     <div className="banner-upload-preview">
                       <img src={form.banner_url} alt="Banner preview" />
                       <div className="banner-upload-overlay">
+                        <button
+                          type="button"
+                          className="banner-adjust-btn"
+                          onClick={() => {
+                            setCropImageSrc(form.banner_url);
+                            setCropFileName('banner.jpg');
+                            setShowCropModal(true);
+                          }}
+                        >
+                          📐 Căn chỉnh lại
+                        </button>
                         <label className="banner-change-btn">
                           🔄 Đổi ảnh
-                          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => void handleBannerUpload(e.target.files?.[0])} />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                            onChange={(e) => {
+                              onSelectBannerFile(e.target.files?.[0]);
+                              e.target.value = '';
+                            }}
+                          />
                         </label>
-                        <button type="button" className="banner-remove-btn" onClick={() => setForm((f) => ({ ...f, banner_url: '' }))}>✕ Xóa</button>
+                        <button
+                          type="button"
+                          className="banner-remove-btn"
+                          onClick={() => setForm((f) => ({ ...f, banner_url: '' }))}
+                        >
+                          ✕ Xóa
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -1012,16 +1992,24 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                       {bannerUploading ? (
                         <>
                           <span className="upload-spinner"></span>
-                          <span>Đang tải ảnh...</span>
+                          <span>Đang tải và tối ưu ảnh banner...</span>
                         </>
                       ) : (
                         <>
-                          <span className="upload-icon">📂</span>
-                          <span className="upload-text">Kéo thả hoặc click để chọn ảnh</span>
-                          <span className="upload-hint">PNG, JPG, WEBP • Tối đa 10MB</span>
+                          <span className="upload-icon">🖼️</span>
+                          <span className="upload-text">Kéo thả hoặc click để chọn ảnh banner</span>
+                          <span className="upload-hint">Tự động mở công cụ căn chỉnh chuẩn 16:9 • Tối đa 5MB</span>
                         </>
                       )}
-                      <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => void handleBannerUpload(e.target.files?.[0])} />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          onSelectBannerFile(e.target.files?.[0]);
+                          e.target.value = '';
+                        }}
+                      />
                     </label>
                   )}
                 </div>
@@ -1074,8 +2062,172 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
-                  placeholder="Nhập mô tả chi tiết về giải đấu..."
+                  placeholder="Nhập mô tả chi tiết về giải đấu (quy tắc, phần thưởng...)..."
                 />
+              </div>
+
+              {/* ===== BAN TỔ CHỨC THAM GIA ĐIỀU HÀNH ===== */}
+              <div className="form-group tm-org-section">
+                <div className="tm-org-section-header">
+                  <h4 className="tm-org-section-title">🛡️ Ban Tổ Chức Tham Gia Điều Hành Giải</h4>
+                  <p className="tm-org-section-sub">
+                    Chọn các CTV thường trực phụ trách và bổ sung CTV thời vụ (sinh viên DUT đã duyệt KYC)
+                  </p>
+                </div>
+
+                {/* 1. CTV Thường Trực */}
+                <div className="tm-org-block">
+                  <span className="tm-org-subheading">
+                    👥 CTV Thường Trực Phụ Trách ({selectedPermanentUserIds.length} đã chọn):
+                  </span>
+                  {candidateUsers.length === 0 ? (
+                    <p style={{ color: '#94a3b8', fontSize: '12px' }}>Đang tải danh sách CTV thường trực...</p>
+                  ) : (
+                    <div className="tm-ctv-grid">
+                      {candidateUsers.map((u) => {
+                        const isSelected = selectedPermanentUserIds.includes(u.id);
+                        return (
+                          <label key={u.id} className={`tm-ctv-card ${isSelected ? 'selected' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {
+                                if (isSelected) {
+                                  setSelectedPermanentUserIds((prev) => prev.filter((id) => id !== u.id));
+                                } else {
+                                  setSelectedPermanentUserIds((prev) => [...prev, u.id]);
+                                }
+                              }}
+                            />
+                            <div className="tm-ctv-card-text">
+                              <strong className="tm-ctv-card-name">{u.full_name}</strong>
+                              <span className="tm-ctv-card-email">{u.email}</span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. CTV Thời Vụ (Add bằng MSSV) */}
+                <div className="tm-org-block">
+                  <span className="tm-org-subheading">
+                    🎓 CTV Thời Vụ (Sinh Viên DUT đã KYC — {selectedSeasonalList.length} nhân sự):
+                  </span>
+                  <div className="tm-seasonal-input-row">
+                    <div className="tm-seasonal-search-wrap">
+                      <input
+                        type="text"
+                        placeholder="Nhập MSSV (VD: 102220...) hoặc Họ tên..."
+                        value={seasonalSearchQuery}
+                        onChange={(e) => setSeasonalSearchQuery(e.target.value)}
+                        className="tm-seasonal-input"
+                      />
+                      {seasonalCandidates.length > 0 && (
+                        <div className="tm-seasonal-dropdown">
+                          {seasonalCandidates.map((c) => (
+                            <div
+                              key={c.id}
+                              className="tm-seasonal-dropdown-item"
+                              onClick={() => {
+                                if (!selectedSeasonalList.some((s) => s.participant_id === c.id)) {
+                                  setSelectedSeasonalList((prev) => [
+                                    ...prev,
+                                    {
+                                      participant_id: c.id,
+                                      full_name: c.full_name,
+                                      student_id: c.student_id || 'N/A',
+                                      custom_title: seasonalTitleInput.trim() || 'CTV Điểm danh',
+                                    },
+                                  ]);
+                                }
+                                setSeasonalSearchQuery('');
+                                setSeasonalCandidates([]);
+                              }}
+                            >
+                              <div>
+                                <strong>{c.full_name}</strong> — <span>MSSV: {c.student_id || 'N/A'}</span>
+                              </div>
+                              <span className="tm-badge-kyc">KYC ✓</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Chức danh (VD: CTV Điểm danh)..."
+                      value={seasonalTitleInput}
+                      onChange={(e) => setSeasonalTitleInput(e.target.value)}
+                      className="tm-seasonal-input"
+                    />
+
+                    <button
+                      type="button"
+                      className="btn-add-seasonal-manual"
+                      onClick={async () => {
+                        if (!seasonalSearchQuery.trim()) {
+                          alert('Vui lòng nhập MSSV hoặc tên sinh viên để thêm');
+                          return;
+                        }
+                        try {
+                          const res = await organizerApi.getCandidateParticipants(seasonalSearchQuery.trim());
+                          if (res.success && res.data && res.data.length > 0) {
+                            const matched = res.data[0];
+                            if (!selectedSeasonalList.some((s) => s.participant_id === matched.id)) {
+                              setSelectedSeasonalList((prev) => [
+                                ...prev,
+                                {
+                                  participant_id: matched.id,
+                                  full_name: matched.full_name,
+                                  student_id: matched.student_id || 'N/A',
+                                  custom_title: seasonalTitleInput.trim() || 'CTV Điểm danh',
+                                },
+                              ]);
+                              setSeasonalSearchQuery('');
+                              setSeasonalCandidates([]);
+                            } else {
+                              alert('Sinh viên này đã được thêm vào danh sách');
+                            }
+                          } else {
+                            alert('Không tìm thấy sinh viên nào đã KYC approved với thông tin này');
+                          }
+                        } catch (err) {
+                          alert('Lỗi tìm kiếm: ' + (err as Error).message);
+                        }
+                      }}
+                    >
+                      ➕ Thêm CTV Thời Vụ
+                    </button>
+                  </div>
+
+                  {/* Danh sách CTV Thời vụ đã thêm */}
+                  {selectedSeasonalList.length > 0 && (
+                    <div className="tm-seasonal-selected-list">
+                      {selectedSeasonalList.map((s) => (
+                        <div key={s.participant_id} className="tm-seasonal-tag">
+                          <span>
+                            🎓 <strong>{s.full_name}</strong> (MSSV: {s.student_id}) — <em>&quot;{s.custom_title}&quot;</em>
+                          </span>
+                          <button
+                            type="button"
+                            className="tm-seasonal-tag-remove"
+                            onClick={() =>
+                              setSelectedSeasonalList((prev) =>
+                                prev.filter((item) => item.participant_id !== s.participant_id),
+                              )
+                            }
+                            title="Xóa khỏi danh sách"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* ===== FORM BUILDER ===== */}
@@ -1232,6 +2384,53 @@ export default function TournamentManager({ userRole }: TournamentManagerProps) 
           </div>
         </div>
       )}
+      {/* Modal Ban Tổ Chức Giải */}
+      {orgModalTournament && (
+        <div className="modal-overlay" onClick={() => setOrgModalTournament(null)}>
+          <div className="modal" style={{ maxWidth: '950px', width: '95%' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Ban Tổ Chức Giải Đấu</h3>
+              <button className="modal-close" onClick={() => setOrgModalTournament(null)}>✕</button>
+            </div>
+            <div style={{ padding: '20px' }}>
+              <TournamentOrganizersTab tournament={orgModalTournament} onClose={() => setOrgModalTournament(null)} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Căn Chỉnh & Cắt Banner 16:9 */}
+      {showCropModal && cropImageSrc && (
+        <BannerCropModal
+          imageSrc={cropImageSrc}
+          fileName={cropFileName}
+          onApply={async (croppedFile) => {
+            await handleBannerUpload(croppedFile);
+          }}
+          onClose={() => {
+            setShowCropModal(false);
+            setCropImageSrc('');
+          }}
+        />
+      )}
+
+      {/* Modal Chi Tiết Toàn Diện Giải Đấu */}
+      <TournamentDetailModal
+        tournament={detailModalTournament}
+        isOpen={Boolean(detailModalTournament)}
+        onClose={() => setDetailModalTournament(null)}
+        onManageOrganizers={(t) => setOrgModalTournament(t)}
+        onManageRegistrations={(t) => void openRegModal(t)}
+      />
+
+      {/* Modal Xác Nhận Hủy Giải Đấu */}
+      <TournamentCancelModal
+        tournament={cancelModalTournament}
+        isOpen={Boolean(cancelModalTournament)}
+        isCancelling={isCancelling}
+        onConfirm={handleCancelTournament}
+        onClose={() => setCancelModalTournament(null)}
+      />
     </div>
   );
 }

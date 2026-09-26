@@ -1,0 +1,229 @@
+/**
+ * =============================================================================
+ * DUT ESPORTS — LEAFLET CHECK-IN MAP STYLES
+ * Theme Cyber-Esports tối giản, hiện đại, tương thích 100% Mobile & Desktop
+ * =============================================================================
+ */
+
+.lcm-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+  background: #0b0f19;
+}
+
+.lcm-container {
+  width: 100%;
+  height: 380px;
+  min-height: 320px;
+  background: #0f172a;
+}
+
+@media (max-width: 640px) {
+  .lcm-container {
+    height: 300px;
+    min-height: 260px;
+  }
+}
+
+/* Custom Marker Styling */
+.lcm-custom-marker {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lcm-marker-pin {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #00f0ff 0%, #2563eb 100%);
+  border: 2px solid #ffffff;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+  transition: transform 0.2s ease;
+}
+
+.lcm-marker-pin:hover {
+  transform: rotate(-45deg) scale(1.15);
+}
+
+.lcm-marker-icon {
+  transform: rotate(45deg);
+  font-size: 15px;
+  line-height: 1;
+}
+
+.lcm-marker-pulse {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(0, 240, 255, 0.35);
+  animation: lcm-pulse 2s infinite ease-out;
+  pointer-events: none;
+}
+
+@keyframes lcm-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Leaflet Popup Customization */
+.leaflet-popup-content-wrapper {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6) !important;
+  padding: 4px !important;
+}
+
+.leaflet-popup-tip {
+  background: #0f172a !important;
+  border: 1px solid rgba(0, 240, 255, 0.4) !important;
+}
+
+.lcm-popup-content {
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  min-width: 220px;
+}
+
+.lcm-popup-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  color: #00f0ff;
+  font-size: 13.5px;
+}
+
+.lcm-popup-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 12.5px;
+}
+
+.lcm-popup-label {
+  color: #94a3b8;
+}
+
+.lcm-popup-val {
+  color: #f1f5f9;
+  font-weight: 600;
+  text-align: right;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lcm-popup-gmaps-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(37, 99, 235, 0.25);
+  border: 1px solid rgba(37, 99, 235, 0.5);
+  color: #60a5fa;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.lcm-popup-gmaps-link:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* Map Header Bar */
+.lcm-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.95);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lcm-top-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.lcm-top-badge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.lcm-top-device {
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-family: monospace;
+}
+
+.lcm-top-device strong {
+  color: #38bdf8;
+}
+
+/* Loading Placeholder */
+.lcm-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 320px;
+  background: #0b0f19;
+  color: #94a3b8;
+  gap: 12px;
+}
+
+.lcm-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(0, 240, 255, 0.2);
+  border-top-color: #00f0ff;
+  border-radius: 50%;
+  animation: lcm-spin 1s linear infinite;
+}
+
+@keyframes lcm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

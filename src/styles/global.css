@@ -1,5 +1,5 @@
 /* ==========================================================
-   GLOBAL STYLES — Reset & nền tảng (dùng design tokens)
+   GLOBAL STYLES — Reset & base layer (Ferrari luxury dark theme)
    ========================================================== */
 @import './tokens.css';
 
@@ -13,11 +13,11 @@ html,
 body {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    var(--color-bg) 0%,
-    var(--color-bg-elevated) 50%,
-    var(--color-bg) 100%
+  background: radial-gradient(
+    ellipse at top,
+    #1a0808 0%,
+    #050505 60%,
+    #050505 100%
   );
   color: var(--color-text);
   font: var(--font-size-md) / 1.6 var(--font-sans);
@@ -39,24 +39,27 @@ body {
   flex-direction: column;
 }
 
+/* ---------- Headings — Ferrari uppercase precision ---------- */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  font-weight: 600;
+  font-weight: 800;
   color: var(--color-text);
+  text-transform: uppercase;
+  line-height: 1.1;
 }
 
 h1 {
   font-size: var(--font-size-2xl);
-  letter-spacing: 3px;
+  letter-spacing: 4px;
 }
 
 h2 {
   font-size: var(--font-size-xl);
-  letter-spacing: 2px;
+  letter-spacing: 3px;
 }
 
 h3 {
@@ -64,11 +67,21 @@ h3 {
   letter-spacing: 1px;
 }
 
+/* h4–h6 keep tighter spacing — no blanket uppercase needed at small sizes */
+h4,
+h5,
+h6 {
+  text-transform: none;
+  letter-spacing: 0.5px;
+  font-weight: 700;
+}
+
 p {
   margin: 0;
   color: var(--color-text-secondary);
 }
 
+/* ---------- Links — Racing Red ---------- */
 a {
   color: var(--color-primary-light);
   text-decoration: none;
@@ -81,7 +94,7 @@ a:hover {
 
 button {
   font-family: inherit;
-  cursor: pointer;
+  cursor: cursor;
 }
 
 input,
@@ -90,20 +103,21 @@ textarea {
   font-family: inherit;
 }
 
-/* ---------- Scrollbar ---------- */
+/* ---------- Scrollbar — Ferrari style (6px, Racing Red thumb) ---------- */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--color-bg);
+  background: #050505;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-bg-elevated);
-  border-radius: var(--radius-full);
+  background: #e10600;
+  border-radius: 1px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-dark);
+  background: #b80500;
 }

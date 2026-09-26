@@ -105,8 +105,25 @@ export default function StudentAuth({ onSuccess, onClose }: StudentAuthProps) {
           return;
         }
 
-        // Với tài khoản sinh viên đã được duyệt (approved): điều hướng về trang chủ chính
-        window.location.href = '/';
+        // 3. Với tài khoản sinh viên đã được duyệt (approved): điều hướng về URL đích (redirect) hoặc trang chủ chính
+        let redirectTarget = '/';
+        if (typeof window !== 'undefined') {
+          const urlParams = new URLSearchParams(window.location.search);
+          const redirectFromQuery = urlParams.get('redirect');
+          const redirectFromStorage = sessionStorage.getItem('auth_redirect');
+          if (redirectFromQuery) {
+            redirectTarget = decodeURIComponent(redirectFromQuery);
+          } else if (redirectFromStorage) {
+            sessionStorage.removeItem('auth_redirect');
+            redirectTarget = redirectFromStorage;
+          }
+        }
+
+        if (onSuccess) {
+          onSuccess(user);
+        }
+
+        window.location.href = redirectTarget;
       } else {
         setError(result.message || 'Thông tin đăng nhập hoặc mật khẩu không chính xác');
       }

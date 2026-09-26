@@ -1,0 +1,188 @@
+/* =============================================================================
+   DUT ESPORTS TOURNAMENT PLATFORM — ADDRESS SELECTOR STYLING
+   Cascading Dropdown Component for Administrative Units (Post 01/07/2025)
+   Cyber-Esports Dark Theme
+   ============================================================================= */
+
+.address-selector-container {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.85) 0%, rgba(30, 41, 59, 0.7) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  margin: 1rem 0;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.5), 0 0 15px -3px rgba(56, 189, 248, 0.1);
+  backdrop-filter: blur(12px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.address-selector-container:focus-within {
+  border-color: rgba(56, 189, 248, 0.55);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.6), 0 0 20px -2px rgba(56, 189, 248, 0.25);
+}
+
+.address-selector-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.address-selector-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #38bdf8;
+  text-transform: uppercase;
+}
+
+.address-selector-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+}
+
+/* 3-Column Grid for Cascading Selectors & Input */
+.address-selector-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .address-selector-grid {
+    grid-template-columns: 1fr;
+    gap: 0.85rem;
+  }
+}
+
+.address-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.address-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.address-label .required-star {
+  color: #f43f5e;
+  font-weight: bold;
+}
+
+.address-select,
+.address-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #f8fafc;
+  font-size: 0.875rem;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.address-select:hover:not(:disabled),
+.address-input:hover:not(:disabled) {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.address-select:focus,
+.address-input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.address-select:disabled,
+.address-input:disabled {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
+  color: #64748b;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.address-select option {
+  background: #0f172a;
+  color: #f8fafc;
+  padding: 0.5rem;
+}
+
+.address-hint {
+  font-size: 0.73rem;
+  color: #64748b;
+  margin-top: 0.15rem;
+}
+
+.address-error {
+  font-size: 0.75rem;
+  color: #f43f5e;
+  font-weight: 500;
+  margin-top: 0.2rem;
+}
+
+/* Live Preview Banner */
+.address-preview-banner {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px dashed rgba(56, 189, 248, 0.35);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.address-preview-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.address-preview-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  word-break: break-word;
+}
+
+.address-preview-value.empty {
+  color: #64748b;
+  font-style: italic;
+  font-weight: 400;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

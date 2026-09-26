@@ -13,11 +13,11 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="footer">
+    <footer className="footer" suppressHydrationWarning>
       {/* Top divider glow */}
       <div className="footer-glow-line" />
 
-      <div className="footer-container">
+      <div className="footer-container" suppressHydrationWarning>
 
         {/* Brand column */}
         <div className="footer-brand">

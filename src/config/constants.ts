@@ -1,7 +1,15 @@
-/** Cấu hình tập trung — dễ thay đổi khi deploy. */
+export const getApiOrigin = (): string => {
+  if (process.env.NEXT_PUBLIC_API_ORIGIN) {
+    return process.env.NEXT_PUBLIC_API_ORIGIN;
+  }
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:5000`;
+  }
+  return 'http://localhost:5000';
+};
 
-export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? 'http://localhost:5000/api';
-export const API_ORIGIN: string = process.env.NEXT_PUBLIC_API_ORIGIN ?? 'http://localhost:5000';
+export const API_ORIGIN: string = getApiOrigin();
+export const API_BASE: string = process.env.NEXT_PUBLIC_API_BASE ?? `${API_ORIGIN}/api`;
 
 export interface GameInfo {
   name: string;

@@ -97,7 +97,9 @@ export default function AdminDashboard() {
               setUser(u);
               setIsLoggedIn(true);
             }
-          } catch {}
+          } catch {
+            // ignore parse error
+          }
         }
       }
       setLoading(false);

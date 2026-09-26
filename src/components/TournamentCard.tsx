@@ -17,18 +17,27 @@ export interface TournamentCardData {
 
 interface TournamentCardProps {
   tournament: TournamentCardData;
+  isRegistered?: boolean;
 }
 
-export default function TournamentCard({ tournament }: TournamentCardProps) {
+export default function TournamentCard({ tournament, isRegistered = false }: TournamentCardProps) {
   const router = useRouter();
 
   const handleCardClick = () => {
-    router.push(`/tournament/${tournament.id}`);
+    if (isRegistered) {
+      router.push('/my-tournaments');
+    } else {
+      router.push(`/tournament/${tournament.id}`);
+    }
   };
 
   const handleRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    router.push(`/tournament/${tournament.id}`);
+    if (isRegistered) {
+      router.push('/my-tournaments');
+    } else {
+      router.push(`/tournament/${tournament.id}`);
+    }
   };
 
   const hasLogo =
@@ -36,9 +45,14 @@ export default function TournamentCard({ tournament }: TournamentCardProps) {
     (tournament.gameLogo.startsWith('http') || tournament.gameLogo.startsWith('/'));
 
   return (
-    <div className="tournament-card" onClick={handleCardClick}>
+    <div className={`tournament-card ${isRegistered ? 'is-registered' : ''}`} onClick={handleCardClick}>
       <div className="card-image-wrapper">
         <img src={tournament.image} alt={tournament.name} className="card-image" />
+        {isRegistered && (
+          <span className="card-registered-badge">
+            ✓ ĐÃ ĐĂNG KÝ
+          </span>
+        )}
       </div>
 
       <div className="card-content">
@@ -78,7 +92,24 @@ export default function TournamentCard({ tournament }: TournamentCardProps) {
           <span className="game-name">{tournament.game}</span>
         </div>
 
-        <button className="register-btn" onClick={handleRegister}>ĐĂNG KÝ NGAY</button>
+        {isRegistered ? (
+          <button
+            type="button"
+            className="register-btn btn-registered"
+            onClick={handleRegister}
+            title="Bạn đã đăng ký giải này. Bấm để xem thông tin đơn và check-in."
+          >
+            ✓ ĐÃ ĐĂNG KÝ
+          </button>
+        ) : (
+          <button
+            type="button"
+            className="register-btn"
+            onClick={handleRegister}
+          >
+            ĐĂNG KÝ NGAY
+          </button>
+        )}
       </div>
     </div>
   );
